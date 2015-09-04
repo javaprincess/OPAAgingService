@@ -1,7 +1,6 @@
 package aging.POC.enforcers;
 
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -16,17 +15,19 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.util.LinkedCaseInsensitiveMap;
 
 import aging.POC.AgedUserEntry;
 import aging.POC.AgedUserNotificationEntry;
 import aging.POC.User;
+import aging.POC.messages.ErrorMessage;
 import aging.POC.storedprocedures.BulkUserDeactivateSP;
 import aging.POC.storedprocedures.BulkUserNotificationFlagUpdateSP;
 import aging.POC.storedprocedures.FindUserAgingCandidatesSP;
-import aging.POC.storedprocedures.ProductId;
 import aging.POC.storedprocedures.ProductsUserIsInvolvedWithSP;
+import aging.POC.storedprocedures.rowmappers.DeactivationMessage;
+import aging.POC.storedprocedures.rowmappers.ProductId;
+import aging.POC.unnamedbehavior.TheUnnamedDeactivationBehavior;
 import aging.POC.util.EmailUtils;
 
 @SpringBootApplication
@@ -46,6 +47,7 @@ public class AgingPolicyEnforcer implements CommandLineRunner {
 	
 	
 	
+	
 	@Autowired
 	public void setDataSource(DataSource source){ 
 		this.jdbcTemplate = new JdbcTemplate(source); 
@@ -53,6 +55,7 @@ public class AgingPolicyEnforcer implements CommandLineRunner {
 		this.bulkUserDeactivateSP =  new BulkUserDeactivateSP(jdbcTemplate.getDataSource());
 		this.bulkUserNotificationFlagUpdateSP = new BulkUserNotificationFlagUpdateSP(jdbcTemplate.getDataSource()); 
 		this.productsUserIsInvolvedWithSP = new ProductsUserIsInvolvedWithSP(jdbcTemplate.getDataSource());
+		
 	}
 	
 	public static void main(String[] args) {
@@ -124,8 +127,7 @@ public class AgingPolicyEnforcer implements CommandLineRunner {
 		System.out.println("looking for new aging candidate matches: " + notificationList.size());
 		
 		for (AgedUserEntry element : notificationList) {
-			//System.out.println(element.getJsonData().getUser().getUserId());
-			//System.out.println(element.getJsonData().getUser().getNotificationFlag());
+			
 			userIdList.add(new Long(element.getJsonData().getUser().getUserId()).toString());
 			
 			System.out.println("putting this on the queue: " +element.getJsonData().getUser().getUserId());
@@ -156,8 +158,7 @@ public class AgingPolicyEnforcer implements CommandLineRunner {
 		System.out.println("looking for 60 day matches: " + notificationList.size());
 		
 		for (AgedUserEntry element : notificationList) {
-			//System.out.println(element.getJsonData().getUser().getUserId());
-			//System.out.println(element.getJsonData().getUser().getNotificationFlag());
+			
 			
 			//build list of userIds to update in RDBMS
 			userIdList.add(new Long(element.getJsonData().getUser().getUserId()).toString());
@@ -189,8 +190,7 @@ public class AgingPolicyEnforcer implements CommandLineRunner {
 			System.out.println("looking for 75 day matches: " + notificationList.size());
 			
 			for (AgedUserEntry element : notificationList) {
-				//System.out.println(element.getJsonData().getUser().getUserId());
-				//System.out.println(element.getJsonData().getUser().getNotificationFlag());
+				
 				//build list of userIds to update in RDBMS
 				userIdList.add(new Long(element.getJsonData().getUser().getUserId()).toString());
 				
@@ -223,8 +223,7 @@ public class AgingPolicyEnforcer implements CommandLineRunner {
 			System.out.println("looking for 85 day matches: " + agedUserEntryNotificationList.size());
 			
 			for (AgedUserEntry element : agedUserEntryNotificationList) {
-				//System.out.println(element.getJsonData().getUser().getUserId());
-				//System.out.println(element.getJsonData().getUser().getNotificationFlag());
+				
 				//build list of userIds to update in RDBMS
 				userIdList.add(new Long(element.getJsonData().getUser().getUserId()).toString());
 				
@@ -252,7 +251,7 @@ public class AgingPolicyEnforcer implements CommandLineRunner {
 		}
 		
 	private void deactivate() {
-		List<String> userIdList = new ArrayList<String> ( Arrays.asList("24292", "24745", "12768", "12767", "12683", "12772"));
+		List<String> userIdList = new ArrayList<String> ( Arrays.asList("24294", "24745", "90", "12771", "54", "91","5"));
 		List<String> productStatusList = new ArrayList<String>( Arrays.asList("1","2","3","6","7","8") );
 		
 		ConcurrentHashMap<String, ArrayList<ProductId>> userProductsConcurrentHashMap = getProductsUsersAreInvolvedWith(productStatusList, userIdList);
@@ -269,59 +268,87 @@ public class AgingPolicyEnforcer implements CommandLineRunner {
 	
     private ConcurrentHashMap<String, ArrayList<String>> bulkDeactivateUserProducts(
 				ConcurrentHashMap<String, ArrayList<ProductId>> userProductsConcurrentHashMap) {
-			//for each product, we need to find out what the user's role is in the product
-    		//if MRCH associate w/active licensee, resubmit the product else, suspend the product
-    	    //if PUB associate, reassign product to the PUBHOLDING account
-    	    //if licensee, suspend products
-    	    //if reviewwer, cancel tasks
-    	
-    		
-    		while (userProductsConcurrentHashMap.keys().hasMoreElements()) {
-	    		//--check for licensee or associate products
-	    		//select userTypeId from productState where productId = 11919
-    			String userId = userProductsConcurrentHashMap.keys().nextElement();
-    			ArrayList<ProductId> productIdList = userProductsConcurrentHashMap.get(userId);
-    			
-    			for (ProductId productId : productIdList) {
-    			
-	    			
-	    			
-		    		String sql = "Select userTypeId, productId from productState where productId=?";
-		    		
-		    		
+			
+
+    		//TODO : I'm building stuff here....where o where is my builder pattern?
+    		//which one should I use -- REFACTOR is calling me....hear her voice in the distance.
+    	    for (String userId : userProductsConcurrentHashMap.keySet()) {
+    	    	List<Integer> productsToSuspend = new ArrayList<Integer>();
+        		List<Integer> productsToResubmit = new ArrayList<Integer>();
+        		List<Integer> productsToReassign = new ArrayList<Integer>();
+        		List<Integer> tasksToCancel = new ArrayList<Integer>();
+        		List<ProductId> productIdList = userProductsConcurrentHashMap.get(userId);
+        		
+    	    	System.out.println("userId: " + userId);
+    	    	System.out.println("productIdList size: " + productIdList.size());
+
+    			for (ProductId productIdListElement : productIdList) {
+
+    				Integer productId = productIdListElement.getProductId();
+    				
+    				//--check for licensee or associate products
+		    		String associateOrLicenseeSql = "SELECT DISTINCT userTypeId, productId FROM productState WHERE productId=?";
+
 		    		//--check for reviewer tasks
-		    		//select * from productReviews where productStateId in (select id from productState where productId = 11919)
-		    		String reviewerSql = "select * from productReviews where productStateId in (select id from productState where productId = ?)";
+		    		String reviewerSql = "SELECT DISTINCT * FROM productReviews WHERE productStateId in (SELECT id FROM productState WHERE id = ?)";
 		    		
-		    		List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, productId.getProductId());
-		    		List<Map<String, Object>> reviewerRows = jdbcTemplate.queryForList(reviewerSql, productId.getProductId());
+		    		List<Map<String, Object>> rows = jdbcTemplate.queryForList(associateOrLicenseeSql, productId);
+		    		List<Map<String, Object>> reviewerRows = jdbcTemplate.queryForList(reviewerSql, productId);
+
 		    		
-		    		System.out.println("userId: " + userId);
-		    		System.out.println("productId (incoming): " + productId.getProductId());
-		    		
-		    		
-		    		if (!reviewerRows.isEmpty()) {
-		    			System.out.println("user is a reviewer on this product");
-		    		}
-		    		
+		    		if (!reviewerRows.isEmpty()) 
+		    			tasksToCancel.add(productId);
+
 		    		for (Map<String, Object> rowElement : rows) {
-		    			
-		    			
-		    			System.out.println(rowElement.get("productId") + " from query");
-		    			
-		    			
-		    			
-		    			if (isAssociate((Integer)rowElement.get("userTypeId")))
-		    				System.out.println("user is an associate on this product");
-		    			else if (isLicensee((Integer)rowElement.get("userTypeId"))) 
-		    				System.out.println("user is a licensee on this product");
-		    			
-		    			System.out.println("------------------------");
+
+		    			if (isAssociate((Integer)rowElement.get("userTypeId"))) {
+		    				//if MRCH associate w/active licensee, resubmit the product else, suspend the product
+		    				//TODO: figure out how to resubmit...and figure out how to determine if there is
+		    				//an active licensee on the product
+		    				//productsToResubmit.add(productId);
+		    				
+		    	    	    //if PUB associate, reassign product to the PUBHOLDING account
+		    				productsToReassign.add(productId);
+		    					
+		    				
+		    			} else if (isLicensee((Integer)rowElement.get("userTypeId"))) {
+		    					productsToSuspend.add(productId);
+		    			}
 		    		}
 		    		
     			}
     		
-    		}
+    			System.out.println("number of products to resassign -- user is an associate (PUB) on these products: " + productsToReassign.size());
+    			System.out.println("number of products to suspend -- user is a licensee on these products: " + productsToSuspend.size());
+    			System.out.println("number of tasks to cancel -- user is a reviewer on these products: " + tasksToCancel.size());
+    			
+    			//TODO: this is behavior...need another pattern
+    			TheUnnamedDeactivationBehavior nameMe = new TheUnnamedDeactivationBehavior();
+    			if (!productsToSuspend.isEmpty()) {
+    				List<DeactivationMessage> suspensionErrorMessages = nameMe.suspend(productsToSuspend, 
+    						userId, 
+    						jdbcTemplate);
+    			}
+    			
+    			//If (!productsToResubmit.isEmpty()) {
+    			//	List<DeactivationMessage> resubmissionErrorMessages = nameMe.resumit(productsToResubmit, 
+    			//			userId, 
+    			//			jdbcTemplate);
+    			
+    			if (!productsToReassign.isEmpty()) {
+    				List<DeactivationMessage> resassignmentErrorMessages = nameMe.reassign(productsToReassign, 
+    						userId, 
+    						jdbcTemplate);
+    			}
+    			
+    			if (!tasksToCancel.isEmpty()) {
+    				List<DeactivationMessage> cancellationErrorMessages = nameMe.cancel(tasksToCancel, 
+    						userId, 
+    						jdbcTemplate);
+    			}
+    			
+    		} 
+    	    
 			return null;
 	}
     
@@ -362,14 +389,7 @@ public class AgingPolicyEnforcer implements CommandLineRunner {
 				
 				cHashMap.put(userIdListElement, productIdList);
 			}
-				
-			//Iterator iterator = result.iterator();
-				
-			//while (iterator.hasNext()) {
-			//	ProductId productId = (ProductId) iterator.next();
-			//	System.out.println("results: " + productId.getProductId());
-			//}
-				
+		
 			return cHashMap;
 		}
 

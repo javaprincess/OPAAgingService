@@ -1,4 +1,4 @@
-package aging.POC.storedprocedures;
+package aging.POC.storedprocedures.rowmappers;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -13,6 +13,8 @@ public class ProductIdRowMapper implements RowMapper {
 		 	ProductId productId = new ProductId();
 	
 	        Integer id = new Integer(StringUtils.trimAllWhitespace(rs.getString(1)));
+	        
+	        System.out.println(id+", ");
 	        productId.setProductId(id);
 
 	        return productId;

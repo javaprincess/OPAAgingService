@@ -1,4 +1,4 @@
-package aging.POC.storedprocedures;
+package aging.POC.storedprocedures.rowmappers;
 
 public class ProductId {
 
@@ -6,4 +6,5 @@ public class ProductId {
 	
 	public Integer getProductId() {return this.productId; }
 	public void setProductId(Integer productId) { this.productId = productId; }
+	
 }
