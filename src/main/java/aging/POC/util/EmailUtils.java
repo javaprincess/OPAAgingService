@@ -11,8 +11,6 @@ import com.disney.opa.bean.EmailDetails;
 import com.disney.opa.bean.Notification;
 import com.disney.opa.service.UtilService;
 
-import javax.mail.internet.AddressException;
-
 @Component
 public class EmailUtils {
 

@@ -3,12 +3,6 @@ package aging.POC.enforcers;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.util.LinkedCaseInsensitiveMap;
-
 import aging.POC.User;
 import aging.POC.deleteThis.AgingPolicy;
 import aging.POC.deleteThis.AgingPolicyEnforcer;
@@ -17,23 +11,18 @@ import aging.POC.deleteThis.UserAgingPolicyTarget;
 import aging.POC.queue.entry.AgedUserEntry;
 import aging.POC.queue.entry.AgedUserNotificationEntry;
 import aging.POC.storedprocedures.BulkUserNotificationFlagUpdateSP;
-import aging.POC.storedprocedures.ProductsUserIsInvolvedWithSP;
-import aging.POC.util.EmailUtils;
+import aging.POC.util.OPAComplianceAgingConstants;
+
 
 public class FirstNotificationEnforcer extends AgingPolicyEnforcer  {
-
-		
 	
-		private AgedUserEntryRepository auRepo;
-		private String enforcerName;
-		private Integer notificationFlag;
-		private AgingPolicyTarget agingPolicyTarget;
-		private String nextEnforcerToCall;
+	private AgedUserEntryRepository auRepo;
+	private String enforcerName;
+	private Integer notificationFlag;
+	private AgingPolicyTarget agingPolicyTarget;
+	private String nextEnforcerToCall;
 		
-		private  BulkUserNotificationFlagUpdateSP bulkUserNotificationFlagUpdateSP;
-	
-		
-		
+	private  BulkUserNotificationFlagUpdateSP bulkUserNotificationFlagUpdateSP;
 
 	public FirstNotificationEnforcer(BulkUserNotificationFlagUpdateSP bulkUserNotificationFlagUpdateSP,
 			AgedUserEntryRepository auRepo) {
@@ -86,14 +75,14 @@ public class FirstNotificationEnforcer extends AgingPolicyEnforcer  {
 	public void enforcePolicy() {
 		
 			Integer age = new Integer(0);
-			Integer notificationFlag = new Integer(60);
+			Integer notificationFlag = new Integer(OPAComplianceAgingConstants.DELTA_1.getNotificationDelta());
 			
 			List<AgedUserEntry> notificationList = auRepo.findAllAgingCandidatesByAge(age);
 			List<String> userIdList = new ArrayList<String>();
 			
 			
 			
-			System.out.println("looking for new aging candidate matches: " + notificationList.size());
+			System.out.println("looking for " + notificationFlag + " aging candidate matches: " + notificationList.size());
 			
 			for (AgedUserEntry element : notificationList) {
 				
@@ -102,7 +91,7 @@ public class FirstNotificationEnforcer extends AgingPolicyEnforcer  {
 				System.out.println("putting this on the queue: " +element.getJsonData().getUser().getUserId());
 				User user =  new User(
 								new Long(element.getJsonData().getUser().getUserId()),
-								60
+								notificationFlag
 							 );
 				
 				auRepo.save(new AgedUserNotificationEntry().createEntry(user));
