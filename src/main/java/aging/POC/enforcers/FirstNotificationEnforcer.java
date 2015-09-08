@@ -1,11 +1,7 @@
 package aging.POC.enforcers;
 
-import aging.POC.AgingPolicy;
-import aging.POC.AgingPolicyEnforcer;
-import aging.POC.AgingPolicyTarget;
-import aging.POC.UserAgingPolicyTarget;
-
 import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -13,57 +9,47 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.util.LinkedCaseInsensitiveMap;
 
-import aging.POC.AgedUserNotificationEntry;
 import aging.POC.User;
+import aging.POC.deleteThis.AgingPolicy;
+import aging.POC.deleteThis.AgingPolicyEnforcer;
+import aging.POC.deleteThis.AgingPolicyTarget;
+import aging.POC.deleteThis.UserAgingPolicyTarget;
+import aging.POC.queue.entry.AgedUserEntry;
+import aging.POC.queue.entry.AgedUserNotificationEntry;
+import aging.POC.storedprocedures.BulkUserNotificationFlagUpdateSP;
+import aging.POC.storedprocedures.ProductsUserIsInvolvedWithSP;
+import aging.POC.util.EmailUtils;
 
+public class FirstNotificationEnforcer extends AgingPolicyEnforcer  {
 
-@SpringBootApplication
-public class FirstNotificationEnforcer extends AgingPolicyEnforcer implements CommandLineRunner  {
-
-		
-		@Autowired
-		private AgedUserEntryRepository auRepo;
 		
 	
+		private AgedUserEntryRepository auRepo;
 		private String enforcerName;
 		private Integer notificationFlag;
 		private AgingPolicyTarget agingPolicyTarget;
 		private String nextEnforcerToCall;
+		
+		private  BulkUserNotificationFlagUpdateSP bulkUserNotificationFlagUpdateSP;
 	
 		
-		public static void main(String[] args) {
-			SpringApplication.run(FirstNotificationEnforcer.class, args);
-		}
 		
-		@Override
-		public void run(String... args) throws Exception {
-			enforcePolicy();
-		
-		}
-		
-		private void putAgingCandidatesOnQueue(ArrayList<LinkedCaseInsensitiveMap<Integer>> resultSetMapElement) {
-			for (LinkedCaseInsensitiveMap<Integer> mapMember : resultSetMapElement) {
-				
-				//TO DO: verify userId is not currently in the OPAQueue
-				//TO DO: create OPAQueue.exists(userId)
-				
-				User user =  new User(
-								new Long(mapMember.get("userId").toString()).longValue(),
-								new Long(mapMember.get("notificationFlag").toString()).longValue()
-							 );
-				
-				auRepo.save(new AgedUserNotificationEntry().createEntry(user));
 
-			}
-		}
-
-	public FirstNotificationEnforcer() {
+	public FirstNotificationEnforcer(BulkUserNotificationFlagUpdateSP bulkUserNotificationFlagUpdateSP,
+			AgedUserEntryRepository auRepo) {
+		setAgedUserEntryRepository(auRepo);
 		setEnforcerName(this.getClass().getName());
 		setNextEnforcerToCall(new String("SecondNotificationEnforcer"));
 		setAgingPolicyTarget(new UserAgingPolicyTarget());
 		setNotificationStatus(new Integer(60));
+		setBulkUserNotificationFlagUpdateSP(bulkUserNotificationFlagUpdateSP);
 	}
 	
+	
+
+	public void setAgedUserEntryRepository(AgedUserEntryRepository auRepo) { this.auRepo = auRepo;}
+
+
 	public void setEnforcerName(String name) {
 		this.enforcerName = name;
 	}
@@ -84,10 +70,56 @@ public class FirstNotificationEnforcer extends AgingPolicyEnforcer implements Co
 		this.nextEnforcerToCall = nextEnforcer;
 	}
 
+	private void setBulkUserNotificationFlagUpdateSP(
+			BulkUserNotificationFlagUpdateSP bulkUserNotificationFlagUpdateSP) {
+		this.bulkUserNotificationFlagUpdateSP = bulkUserNotificationFlagUpdateSP;
+		
+	}
+	
 	@Override
 	protected boolean isValidAgingCandidate() {
 		// TODO Auto-generated method stub
 		return false;
 	}
+	
+	//FirstNotificationEnforcer.enforcePolicy()
+	public void enforcePolicy() {
+		
+			Integer age = new Integer(0);
+			Integer notificationFlag = new Integer(60);
+			
+			List<AgedUserEntry> notificationList = auRepo.findAllAgingCandidatesByAge(age);
+			List<String> userIdList = new ArrayList<String>();
+			
+			
+			
+			System.out.println("looking for new aging candidate matches: " + notificationList.size());
+			
+			for (AgedUserEntry element : notificationList) {
+				
+				userIdList.add(new Long(element.getJsonData().getUser().getUserId()).toString());
+				
+				System.out.println("putting this on the queue: " +element.getJsonData().getUser().getUserId());
+				User user =  new User(
+								new Long(element.getJsonData().getUser().getUserId()),
+								60
+							 );
+				
+				auRepo.save(new AgedUserNotificationEntry().createEntry(user));
+			}
+			
+			bulkUserNotificationFlagUpdate(userIdList, notificationFlag);
+			/*try {
+				EmailUtils emailUtils =  new EmailUtils();
+				emailUtils.sendNotificationEMail();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}*/
+	}
 
+
+	public void bulkUserNotificationFlagUpdate(List<String> notificationList, Integer notificationFlag) {
+		bulkUserNotificationFlagUpdateSP.execute(notificationList, notificationFlag);
+	}
 }

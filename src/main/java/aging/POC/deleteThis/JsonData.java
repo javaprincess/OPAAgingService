@@ -1,4 +1,6 @@
-package aging.POC;
+package aging.POC.deleteThis;
+
+import aging.POC.User;
 
 
 public class JsonData {

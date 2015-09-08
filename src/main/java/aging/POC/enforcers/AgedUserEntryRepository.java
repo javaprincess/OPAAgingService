@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
-import aging.POC.AgedUserEntry;
+import aging.POC.queue.entry.AgedUserEntry;
 
 @Document(collection="AgedUserEntryRepository")
 public interface AgedUserEntryRepository extends MongoRepository<AgedUserEntry, String> {
@@ -22,7 +22,7 @@ public interface AgedUserEntryRepository extends MongoRepository<AgedUserEntry, 
     @Query("{ 'jsonData.user.notificationFlag' :  ?0  }")
     public List<AgedUserEntry> findAllAgingCandidatesByAge(int age);
     
-    @Query("{ 'jsonData.user.notificationFlag' : 0 }")
+    /*@Query("{ 'jsonData.user.notificationFlag' : 0 }")
     public List<AgedUserEntry> findAllNewAgingCandidates();
     
     //@Query("{ 'jsonData.user.notificationFlag' : { '$gt' : 60 } }")
@@ -36,5 +36,5 @@ public interface AgedUserEntryRepository extends MongoRepository<AgedUserEntry, 
     public List<AgedUserEntry> findAll85DayAgingCandidates();
     
     @Query("{ 'jsonData.user.notificationFlag' :  90  }")
-    public List<AgedUserEntry> findAll90DayAgingCandidates();
+    public List<AgedUserEntry> findAll90DayAgingCandidates();*/
 }

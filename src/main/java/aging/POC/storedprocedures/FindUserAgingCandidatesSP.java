@@ -10,7 +10,7 @@ import org.springframework.jdbc.object.StoredProcedure;
 public class FindUserAgingCandidatesSP extends StoredProcedure {
 	
 	public FindUserAgingCandidatesSP(DataSource dataSource) {
-		super(dataSource, "dbo.spAgingFindUserAgingCandidatesTMA");
+		super(dataSource, "dbo.spAgingFindCandidatesTMA");
 		compile();
 	}
 	
