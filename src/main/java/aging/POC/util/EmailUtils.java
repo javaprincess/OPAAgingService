@@ -11,7 +11,7 @@ import com.disney.opa.bean.EmailDetails;
 import com.disney.opa.bean.Notification;
 import com.disney.opa.service.UtilService;
 
-@Component
+@Component("emailUtils")
 public class EmailUtils {
 
 	 

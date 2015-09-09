@@ -16,7 +16,7 @@ import org.springframework.util.LinkedCaseInsensitiveMap;
 public class BulkUserDeactivateSP extends StoredProcedure {
 	
 	public BulkUserDeactivateSP(DataSource dataSource) {
-		super(dataSource, "dbo.spAgingBulkDeativateUsersTMA");
+		super(dataSource, "dbo.spAgingBulkDeactivateUsersTMA");
 		SqlParameter userIdListParam = new SqlParameter("userIdList", Types.NVARCHAR);
 		SqlParameter[] paramArray = {userIdListParam};
 		setParameters(paramArray);

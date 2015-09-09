@@ -8,27 +8,32 @@ import org.springframework.stereotype.Component;
 import aging.POC.User;
 import aging.POC.queue.entry.AgedUserEntry;
 import aging.POC.queue.entry.AgedUserNotificationEntry;
+import aging.POC.storedprocedures.BulkUserNotificationFlagUpdateSP;
 import aging.POC.util.OPAComplianceAgingConstants;
 
-@Component("firstNotificationEnforcer")
-public class FirstNotificationEnforcer extends AgingPolicyEnforcer  {
-	
+@Component("secondNotificationEnforcer")
+public class SecondNotificationEnforcer extends AgingPolicyEnforcer  {
+
+
 	private String enforcerName;
 	private Integer notificationFlag;
 	private String nextEnforcerToCall;
+		
 
-	public FirstNotificationEnforcer() {
+	public SecondNotificationEnforcer() {
 		
 	}
+
 
 	public void setEnforcerName(String name) {
 		this.enforcerName = name;
 	}
 	
+	
 	public void setNextEnforcerToCall(String nextEnforcer) {
 		this.nextEnforcerToCall = nextEnforcer;
 	}
-	
+
 	protected boolean isValidAgingCandidate() {
 		// TODO Auto-generated method stub
 		return false;
@@ -36,15 +41,15 @@ public class FirstNotificationEnforcer extends AgingPolicyEnforcer  {
 	
 	public void enforcePolicy() {
 		
-			Integer age = new Integer(0);
-			System.out.println(OPAComplianceAgingConstants.DELTA_1.getNotificationDelta());
-			
-			Integer notificationFlag = new Integer(OPAComplianceAgingConstants.DELTA_1.getNotificationDelta());
+			Integer age = new Integer(OPAComplianceAgingConstants.DELTA_1.getNotificationDelta());
+			Integer notificationFlag = new Integer(OPAComplianceAgingConstants.DELTA_2.getNotificationDelta());
 			
 			List<AgedUserEntry> notificationList = agedUserEntryRepository.findAllAgingCandidatesByAge(age);
 			List<String> userIdList = new ArrayList<String>();
 			
-			System.out.println("looking for " + notificationFlag + " aging candidate matches: " + notificationList.size());
+			
+			
+			System.out.println("looking for " + notificationFlag + " day aging candidate matches: " + notificationList.size());
 			
 			for (AgedUserEntry element : notificationList) {
 				
@@ -61,12 +66,12 @@ public class FirstNotificationEnforcer extends AgingPolicyEnforcer  {
 			
 			bulkUserNotificationFlagUpdate(userIdList, notificationFlag);
 			/*try {
-				EmailUtils emailUtils =  new EmailUtils();
-				emailUtils.sendNotificationEMail();
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}*/
+			EmailUtils emailUtils =  new EmailUtils();
+			emailUtils.sendNotificationEMail();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
 	}
 
 
