@@ -3,6 +3,7 @@ package aging.POC.unnamedbehavior;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -16,7 +17,7 @@ import aging.POC.storedprocedures.rowmappers.DeactivationMessage;
 public class TheUnnamedDeactivationBehavior {
 
 	public List<DeactivationMessage> suspend(List<Integer> productsToSuspend, 
-			String userId, 
+			long userId, 
 			JdbcTemplate jdbcTemplate) {
 		
 		String comments = "User: " + userId + "has met the OPA 90 Day Compliance Rule for account suspension.";
@@ -39,8 +40,8 @@ public class TheUnnamedDeactivationBehavior {
 		return deactivationMessageList;
 	}
 	
-	public List<DeactivationMessage>  resumit(List<Integer> productsToResubmit, 
-			String userId,
+	public List<DeactivationMessage>  resubmit(ConcurrentHashMap<Long, Integer> productsToResubmitMap, 
+			long userId,
 			JdbcTemplate jdbcTemplate) {
 
 		return null;
@@ -50,7 +51,7 @@ public class TheUnnamedDeactivationBehavior {
 	//TODO: Create PUBHolding Account for PUB Associate reassignment.  Using UserId=54 for right now
 	//Make this a bulk process
 	public List<DeactivationMessage>  reassign(List<Integer> productsToReassign,
-			String userId,
+			long userId,
 			JdbcTemplate jdbcTemplate) {
 		
 		String comments = "User: " + userId + "has met the OPA 90 Day Compliance Rule for account reassignment.";
@@ -83,7 +84,7 @@ public class TheUnnamedDeactivationBehavior {
 	
 	//TODO: need to decide what userId we are acting as when we cancel.  For right now, using -1
 	public List<DeactivationMessage>  cancel(List<Integer>tasksToCancel, 
-			String userId,
+			long userId,
 			JdbcTemplate jdbcTemplate) {
 		String comments = "User: " + userId + "has met the OPA 90 Day Compliance Rule for account cancellation.";
 		//TODO: fix this

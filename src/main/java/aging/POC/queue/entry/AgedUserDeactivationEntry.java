@@ -2,18 +2,28 @@ package aging.POC.queue.entry;
 
 import java.util.Calendar;
 
+import org.springframework.stereotype.Component;
+
+import aging.POC.JsonData;
 import aging.POC.User;
-import aging.POC.deleteThis.JsonData;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+@Component("agedUserDeactivationEntry")
 public class AgedUserDeactivationEntry extends AgedUserEntry {
-
 	
-	public AgedUserEntry createEntry(User user) {
+	public AgedUserDeactivationEntry(String job) {
+		this.job = job;
+	}
+	
+	public String getJob() {
+		return this.job;
+	}
+	
+	/*public AgedUserEntry createEntry(User user) {
 		this.id = getNextId();
-		this.inUseBy = "tracy"; //should come from User.name
+		this.inUseBy = "OPA_Compliance_User_Aging_Service";
 		this.job = "ENFORCE_DEACTIVIATION_POLICY";
 		this.createDate = Calendar.getInstance().getTime();
 		
@@ -24,11 +34,10 @@ public class AgedUserDeactivationEntry extends AgedUserEntry {
 		try {
 			mapper.writeValueAsString(jsonData);
 		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
 		return this;
-	}
+	}*/
 
 }

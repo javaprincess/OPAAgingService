@@ -1,19 +1,14 @@
 package aging.POC.enforcers;
 
 
-import java.util.ArrayList;
+
 import java.util.Arrays;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import javax.sql.DataSource;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.annotation.Resource;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
+
 import aging.POC.util.OPAComplianceAgingConstants;
 import aging.POC.enforcers.factory.AgingPolicyEnforcerFactory;
 
@@ -22,13 +17,13 @@ import aging.POC.enforcers.factory.AgingPolicyEnforcerFactory;
 public class AgingService implements CommandLineRunner {
 	
 	
-	@Autowired
+	@Resource
 	public ApplicationContext ctx;
 	
-	@Autowired
+	@Resource(name="enforcerFactory")
 	private AgingPolicyEnforcerFactory enforcerFactory;
 	
-	@Autowired
+	@Resource
 	public void setApplicationContext(ApplicationContext ctx) {
 		this.ctx = ctx;
 	}
@@ -49,11 +44,11 @@ public class AgingService implements CommandLineRunner {
 		
 		//printOutAllSpringBeans();
 	
-		//AgingPolicyEnforcer enforcer = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("scanner");
+		AgingPolicyEnforcer enforcer = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("scanner");
 		//AgingPolicyEnforcer enforcer = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("firstNotificationEnforcer");
 		//AgingPolicyEnforcer enforcer = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("secondNotificationEnforcer");
 		//AgingPolicyEnforcer enforcer = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("thirdNotificationEnforcer");
-		AgingPolicyEnforcer enforcer = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("fourthNotificationEnforcer");
+		//AgingPolicyEnforcer enforcer = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("fourthNotificationEnforcer");
 		
 		enforcer.enforcePolicy();
 	}

@@ -5,33 +5,37 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.sql.DataSource;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.util.LinkedCaseInsensitiveMap;
-
 import aging.POC.queue.entry.EntryManager;
-import aging.POC.storedprocedures.BulkUserDeactivateSP;
-import aging.POC.storedprocedures.BulkUserNotificationFlagUpdateSP;
-import aging.POC.storedprocedures.FindUserAgingCandidatesSP;
-import aging.POC.storedprocedures.ProductsUserIsInvolvedWithSP;
+import aging.POC.storedprocedures.rowmappers.AgedUser;
+
+
+
 
 @Component("scanner")
 public class AgingPolicyScanner extends AgingPolicyEnforcer {
 
 	public void enforcePolicy() {
 
-		Map<String, Object> resultSet =  findUserAgingCandidatesSP.execute();
-		Iterator<Map.Entry<String, Object>> resultSetIterator = resultSet.entrySet().iterator();
+		//Map<String, Object> resultSet =  findUserAgingCandidatesSP.execute();
+		
+		Map agingCandidatesMap = findUserAgingCandidatesSP.execute();
+		
+		//@SuppressWarnings("unchecked")
+		ArrayList<AgedUser> candidateList = (ArrayList<AgedUser>) agingCandidatesMap.get("RESULT_LIST");
+		
+		//cHashMap.put(user, productIdList);
+		
+		//Iterator<Map.Entry<String, Object>> resultSetIterator = resultSet.entrySet().iterator();
 		EntryManager entryManager = new EntryManager(agedUserEntryRepository);
 		
-		while (resultSetIterator.hasNext()) {
-			@SuppressWarnings("unchecked")
-			ArrayList<LinkedCaseInsensitiveMap<Integer>> resultSetMapElement = (ArrayList<LinkedCaseInsensitiveMap<Integer>>)resultSetIterator.next().getValue();
-			entryManager.putAgingCandidatesOnQueue(resultSetMapElement);
+		//while (resultSetIterator.hasNext()) {
+			//@SuppressWarnings("unchecked")
+			//ArrayList<AgingCandidateRowMapper> resultSetMapElement = (ArrayList<AgingCandidateRowMapper>)resultSetIterator.next().getValue();
+		
+			entryManager.putAgingCandidatesOnQueue(candidateList);
 			
-		}
+		//}
+		
 	}
 }

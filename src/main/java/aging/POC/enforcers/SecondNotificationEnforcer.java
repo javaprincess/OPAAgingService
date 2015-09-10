@@ -41,10 +41,11 @@ public class SecondNotificationEnforcer extends AgingPolicyEnforcer  {
 	
 	public void enforcePolicy() {
 		
+			long isPub;
 			Integer age = new Integer(OPAComplianceAgingConstants.DELTA_1.getNotificationDelta());
 			Integer notificationFlag = new Integer(OPAComplianceAgingConstants.DELTA_2.getNotificationDelta());
 			
-			List<AgedUserEntry> notificationList = agedUserEntryRepository.findAllAgingCandidatesByAge(age);
+			List<AgedUserEntry> notificationList = agedUserEntryRepository.findAllAgingCandidatesByAge(90-age);
 			List<String> userIdList = new ArrayList<String>();
 			
 			
@@ -52,16 +53,18 @@ public class SecondNotificationEnforcer extends AgingPolicyEnforcer  {
 			System.out.println("looking for " + notificationFlag + " day aging candidate matches: " + notificationList.size());
 			
 			for (AgedUserEntry element : notificationList) {
-				
+				isPub = element.getJsonData().getUser().getIsPub();
 				userIdList.add(new Long(element.getJsonData().getUser().getUserId()).toString());
 				
 				System.out.println("putting this on the queue: " +element.getJsonData().getUser().getUserId());
 				User user =  new User(
 								new Long(element.getJsonData().getUser().getUserId()),
-								notificationFlag
+								90-notificationFlag,
+								isPub
 							 );
 				
-				agedUserEntryRepository.save(new AgedUserNotificationEntry().createEntry(user));
+				//agedUserEntryRepository.save(new AgedUserNotificationEntry().createEntry(user));
+				agedUserEntryRepository.save(AgedUserEntry.createEntry(user, new AgedUserNotificationEntry("ENFORCE_WARNING_NOTIFICATION")));
 			}
 			
 			bulkUserNotificationFlagUpdate(userIdList, notificationFlag);

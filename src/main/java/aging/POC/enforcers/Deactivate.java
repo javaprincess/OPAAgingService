@@ -6,11 +6,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.annotation.Resource;
+
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import aging.POC.User;
 import aging.POC.queue.entry.AgedUserDeactivationEntry;
+import aging.POC.queue.entry.EntryManager;
 import aging.POC.storedprocedures.BulkUserDeactivateSP;
 import aging.POC.storedprocedures.ProductsUserIsInvolvedWithSP;
 import aging.POC.storedprocedures.rowmappers.DeactivationMessage;
@@ -19,9 +22,10 @@ import aging.POC.unnamedbehavior.TheUnnamedDeactivationBehavior;
 
 @Component("deactivate")
 public class Deactivate extends AgingPolicyEnforcer {
-	
 
+	private EntryManager entryManager;
 	private List<String> userIdList;
+	private List<User> userList;
 	
 	public Deactivate() {
 		
@@ -31,9 +35,14 @@ public class Deactivate extends AgingPolicyEnforcer {
 		this.userIdList = userIdList;
 	}
 	
+	public void setUserList(List<User> userList) {
+		this.userList = userList;
+	}
+	
 	public void enforcePolicy() {
 
-		deactivateProductsUserIdListIsInvolvedWith(userIdList);
+		this.entryManager =  new EntryManager(agedUserEntryRepository);
+		deactivateProductsUserIdListIsInvolvedWith(userList);
 		deactivateUsers(userIdList);
 	}
 	
@@ -41,13 +50,14 @@ public class Deactivate extends AgingPolicyEnforcer {
 		bulkUserDeactivateSP.execute(userIdListToDeactivate.toString().replace("[", "").replace("]","")); 
 	}
 	
-	private void deactivateProductsUserIdListIsInvolvedWith(List<String> userIdList) {
+	private void deactivateProductsUserIdListIsInvolvedWith(List<User> userList) {
 	
+		//TODO: I'm thinking this should be in OPAProperties.
 		List<String> productStatusList = new ArrayList<String>( Arrays.asList("1","2","3","6","7","8") );
-		ConcurrentHashMap<String, ArrayList<ProductId>> userProductIdsConcurrentHashMap = null;
+		ConcurrentHashMap<User, ArrayList<ProductId>> userProductIdsConcurrentHashMap = null;
 		ConcurrentHashMap<String, ArrayList<String>> errorMessageMapForUsersWithProductsThatFailedDeactivation =  null;
 		
-		userProductIdsConcurrentHashMap = getProductsUsersAreInvolvedWith(productStatusList, userIdList);	
+		userProductIdsConcurrentHashMap = getProductsUsersAreInvolvedWith(productStatusList, userList);	
 		errorMessageMapForUsersWithProductsThatFailedDeactivation = bulkDeactivateUserProducts(userProductIdsConcurrentHashMap);
 		
 		/*for (String userId : userIdList) {
@@ -58,40 +68,23 @@ public class Deactivate extends AgingPolicyEnforcer {
 		bulkDeactivateUsers(usersToDeactivateList); */
 	}
 	
-	private void putAgingCandidatesToDeactivateOnTheQueue(Long userId,
-			List<ProductId> productIdList,
-			List<Integer> productsToSuspend,
-			List<Integer> productsToResubmit,
-			List<Integer> productsToReassign,
-			List<Integer> tasksToCancel) {
-
-			User user = new User(userId, 90);
-			user.setProductIdList(productIdList);
-			user.setProductsToSuspend(productsToSuspend);
-			user.setProductsToResubmit(productsToResubmit);
-			user.setProductsToReassign(productsToReassign);
-			user.setTasksToCancel(tasksToCancel);
-			
-			agedUserEntryRepository.save(new AgedUserDeactivationEntry().createEntry(user));
-		
-	}
 	
 	
 	
     private ConcurrentHashMap<String, ArrayList<String>> bulkDeactivateUserProducts(
-				ConcurrentHashMap<String, ArrayList<ProductId>> userProductsConcurrentHashMap) {
+				ConcurrentHashMap<User, ArrayList<ProductId>> userProductsConcurrentHashMap) {
 			
 
     		//TODO : I'm building stuff here....where o where is my builder pattern?
     		//which one should I use -- REFACTOR is calling me....hear her voice in the distance.
-    	    for (String userId : userProductsConcurrentHashMap.keySet()) {
+    	    for (User user : userProductsConcurrentHashMap.keySet()) {
     	    	List<Integer> productsToSuspend = new ArrayList<Integer>();
-        		List<Integer> productsToResubmit = new ArrayList<Integer>();
+        		ConcurrentHashMap<Long, Integer> productsToResubmitMap = new ConcurrentHashMap<Long, Integer>();
         		List<Integer> productsToReassign = new ArrayList<Integer>();
         		List<Integer> tasksToCancel = new ArrayList<Integer>();
-        		List<ProductId> productIdList = userProductsConcurrentHashMap.get(userId);
+        		List<ProductId> productIdList = userProductsConcurrentHashMap.get(user.getUserId());
         		
-    	    	System.out.println("userId: " + userId);
+    	    	System.out.println("userId: " + user.getUserId());
     	    	System.out.println("productIdList size: " + productIdList.size());
 
     			for (ProductId productIdListElement : productIdList) {
@@ -114,13 +107,14 @@ public class Deactivate extends AgingPolicyEnforcer {
 		    		for (Map<String, Object> rowElement : rows) {
 
 		    			if (isAssociate((Integer)rowElement.get("userTypeId"))) {
-		    				//if MRCH associate w/active licensee, resubmit the product else, suspend the product
-		    				//TODO: figure out how to resubmit...and figure out how to determine if there is
-		    				//an active licensee on the product
-		    				//productsToResubmit.add(productId);
-		    				
-		    	    	    //if PUB associate, reassign product to the PUBHOLDING account
-		    				productsToReassign.add(productId);
+		    			
+		    				if (user.isPubAssociate()) {
+		    					productsToReassign.add(productId);
+		    				} else if (user.hasAnActiveLicenseeForProduct(productId)) {
+		    					productsToResubmitMap.put(user.getActiveLicensee(), productId);
+		    				} else {
+		    					productsToSuspend.add(productId);
+		    				}
 		    					
 		    				
 		    			} else if (isLicensee((Integer)rowElement.get("userTypeId"))) {
@@ -135,10 +129,10 @@ public class Deactivate extends AgingPolicyEnforcer {
     			System.out.println("number of tasks to cancel -- user is a reviewer on these products: " + tasksToCancel.size());
     			//TODO: don't forget resubmit!
     			
-    			putAgingCandidatesToDeactivateOnTheQueue(new Long(userId),
+    			entryManager.putAgingCandidatesToDeactivateOnTheQueue(user,
     					productIdList,
     					productsToReassign,
-    					productsToResubmit,
+    					productsToResubmitMap,
     					productsToSuspend,
     					tasksToCancel);
     			
@@ -148,24 +142,25 @@ public class Deactivate extends AgingPolicyEnforcer {
     			TheUnnamedDeactivationBehavior nameMe = new TheUnnamedDeactivationBehavior();
     			if (!productsToSuspend.isEmpty()) {
     				List<DeactivationMessage> suspensionErrorMessages = nameMe.suspend(productsToSuspend, 
-    						userId, 
+    						user.getUserId(), 
     						jdbcTemplate);
     			}
     			
-    			//If (!productsToResubmit.isEmpty()) {
-    			//	List<DeactivationMessage> resubmissionErrorMessages = nameMe.resumit(productsToResubmit, 
-    			//			userId, 
-    			//			jdbcTemplate);
+    			if (!productsToResubmitMap.isEmpty()) {
+    				List<DeactivationMessage> resubmissionErrorMessages = nameMe.resubmit(productsToResubmitMap, 
+    						user.getUserId(), 
+    						jdbcTemplate);
+    			}
     			
     			if (!productsToReassign.isEmpty()) {
     				List<DeactivationMessage> resassignmentErrorMessages = nameMe.reassign(productsToReassign, 
-    						userId, 
+    						user.getUserId(), 
     						jdbcTemplate);
     			}
     			
     			if (!tasksToCancel.isEmpty()) {
     				List<DeactivationMessage> cancellationErrorMessages = nameMe.cancel(tasksToCancel, 
-    						userId, 
+    						user.getUserId(), 
     						jdbcTemplate);
     			}
     			
@@ -192,24 +187,26 @@ public class Deactivate extends AgingPolicyEnforcer {
     	return isLicensee;
     }
 
-	private ConcurrentHashMap<String, ArrayList<ProductId>> getProductsUsersAreInvolvedWith(
+	private ConcurrentHashMap<User, ArrayList<ProductId>> getProductsUsersAreInvolvedWith(
 			    List<String> productStatusList,
-				List<String> userIdList) {
+				List<User> userList) {
 		
-			ConcurrentHashMap<String, ArrayList<ProductId>> cHashMap = new ConcurrentHashMap<String, ArrayList<ProductId>>();
+		//TODO: shouldn't i make a  local copy of userList?
+		
+			ConcurrentHashMap<User, ArrayList<ProductId>> cHashMap = new ConcurrentHashMap<User, ArrayList<ProductId>>();
 			
 			//TODO :  To all the GoodCodingPracticeGoddessesUpAbove -- please let Tracy refactor this crap.  She knows better than this
 			//but please have grace upon her that she may remember to come back here when she is finished
 			//with stringing this all together.  Amen.  Thank you.  Blessed Be and all that jazz :-)
-			for ( String userIdListElement : userIdList) {
-				Integer userId = new Integer(userIdListElement);
+			for ( User user : userList) {
+				//Integer userId = new Integer(userIdListElement);
 				
-				Map productsUserIsInvolvedWith = productsUserIsInvolvedWithSP.execute(productStatusList, userId);
+				Map productsUserIsInvolvedWith = productsUserIsInvolvedWithSP.execute(productStatusList, user.getUserId());
 				
 				@SuppressWarnings("unchecked")
 				ArrayList<ProductId> productIdList = (ArrayList<ProductId>) productsUserIsInvolvedWith.get("RESULT_LIST");
 				
-				cHashMap.put(userIdListElement, productIdList);
+				cHashMap.put(user, productIdList);
 			}
 		
 			return cHashMap;
