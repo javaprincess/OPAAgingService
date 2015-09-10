@@ -1,28 +1,24 @@
 package aging.POC.enforcers;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.Resource;
 
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import aging.POC.User;
-import aging.POC.queue.entry.AgedUserDeactivationEntry;
 import aging.POC.queue.entry.AgedUserEntry;
 import aging.POC.queue.entry.AgedUserNotificationEntry;
-import aging.POC.storedprocedures.BulkUserDeactivateSP;
-import aging.POC.storedprocedures.BulkUserNotificationFlagUpdateSP;
-import aging.POC.storedprocedures.ProductsUserIsInvolvedWithSP;
-import aging.POC.util.OPAComplianceAgingConstants;
+import aging.POC.queue.entry.EntryManager;
+import aging.POC.storedprocedures.rowmappers.AgedUser;
+import aging.POC.util.OPAComplianceAgingEnum;
 
 @Component("fourthNotificationEnforcer")
 public class FourthNotificationEnforcer extends AgingPolicyEnforcer  {
 
-	@Resource(name="deactivate")
-	Deactivate deactivate;
+	@Resource(name="deactivatePolicyEnforcer")
+	DeactivatePolicyEnforcer deactivatePolicyEnforcer;
 	
 	private String enforcerName;
 	private Integer notificationFlag;
@@ -45,18 +41,19 @@ public class FourthNotificationEnforcer extends AgingPolicyEnforcer  {
 	public void enforcePolicy() {
 		
 		long isPub;
-		Integer age = new Integer(OPAComplianceAgingConstants.DELTA_3.getNotificationDelta());
-		Integer notificationFlag = new Integer(OPAComplianceAgingConstants.DELTA_4.getNotificationDelta());
+		Integer age = new Integer(OPAComplianceAgingEnum.DELTA_3.getValue());
+		Integer notificationFlag = new Integer(OPAComplianceAgingEnum.DELTA_4.getValue());
+		EntryManager entryManager = new EntryManager(agedUserEntryRepository);
 			
-		List<AgedUserEntry> notificationList = agedUserEntryRepository.findAllAgingCandidatesByAge(90-age);
+		List<AgedUser> notificationList = agedUserEntryRepository.findAllAgingCandidatesByAge(90-age);
 		List<String> userIdList = new ArrayList<String>();
 		List<User> userList = new ArrayList<User>();
 			
 		System.out.println("looking for " + notificationFlag + " day aging candidate matches: " + notificationList.size());
 			
-		for (AgedUserEntry element : notificationList) {
-			isPub = element.getJsonData().getUser().getIsPub();
-			userIdList.add(new Long(element.getJsonData().getUser().getUserId()).toString());
+		/*for (AgedUser element : notificationList) {
+			isPub = element.getIsPub();
+			userIdList.add(new Long(element..getUserId()).toString());
 				
 			System.out.println("putting this on the queue: " +element.getJsonData().getUser().getUserId());
 			User user =  new User(
@@ -66,10 +63,11 @@ public class FourthNotificationEnforcer extends AgingPolicyEnforcer  {
 							);
 				
 			userList.add(user);
-			//agedUserEntryRepository.save(new AgedUserDeactivationEntry().createEntry(user));
-			agedUserEntryRepository.save(AgedUserEntry.createEntry(user, new AgedUserNotificationEntry("ENFORCE_WARNING_NOTIFICATION")));
-		}
 			
+			agedUserEntryRepository.save(AgedUserEntry.createEntry(user, new AgedUserNotificationEntry("ENFORCE_WARNING_NOTIFICATION")));
+		}*/
+			
+		entryManager.addWarningEntries(notificationList);
 		bulkUserNotificationFlagUpdate(userIdList, notificationFlag);
 		/*try {
 			EmailUtils emailUtils =  new EmailUtils();
@@ -84,13 +82,10 @@ public class FourthNotificationEnforcer extends AgingPolicyEnforcer  {
 
 
 	private void deactivate(List<User> userList) {
-		//List<String> userIdList = new ArrayList<String> ( Arrays.asList("24294", "24745", "90", "12771", "54", "91","5"));
-		List<String> userIdList = new ArrayList<String> ( Arrays.asList("10"));
-		deactivate.setUserList(userList);
-		deactivate.setUserIdList(userIdList);
-		deactivate.enforcePolicy();
 		
-		
+		deactivatePolicyEnforcer.setUserList(userList);
+		deactivatePolicyEnforcer.enforcePolicy();
+
 	}
 	
 	public void bulkUserNotificationFlagUpdate(List<String> notificationList, Integer notificationFlag) {

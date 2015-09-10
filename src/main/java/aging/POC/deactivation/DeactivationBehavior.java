@@ -1,22 +1,24 @@
-package aging.POC.unnamedbehavior;
+package aging.POC.deactivation;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
 import org.springframework.jdbc.core.JdbcTemplate;
-
+import org.springframework.stereotype.Component;
 import aging.POC.storedprocedures.BulkProductCancelSP;
 import aging.POC.storedprocedures.BulkProductReassignSP;
 import aging.POC.storedprocedures.BulkProductSuspendSP;
 import aging.POC.storedprocedures.rowmappers.DeactivationMessage;
 
+@Component("deactivationBehavior")
+public class DeactivationBehavior {
 
-//TODO: begging for a REFACTOR and a RENAME
-public class TheUnnamedDeactivationBehavior {
-
-	public List<DeactivationMessage> suspend(List<Integer> productsToSuspend, 
+	public DeactivationBehavior() {
+		
+	}
+	
+	public List<DeactivationMessage> suspendProducts(List<Integer> productsToSuspend, 
 			long userId, 
 			JdbcTemplate jdbcTemplate) {
 		
@@ -40,7 +42,7 @@ public class TheUnnamedDeactivationBehavior {
 		return deactivationMessageList;
 	}
 	
-	public List<DeactivationMessage>  resubmit(ConcurrentHashMap<Long, Integer> productsToResubmitMap, 
+	public List<DeactivationMessage>  resubmitProducts(ConcurrentHashMap<Long, Integer> productsToResubmitMap, 
 			long userId,
 			JdbcTemplate jdbcTemplate) {
 
@@ -50,12 +52,13 @@ public class TheUnnamedDeactivationBehavior {
 	
 	//TODO: Create PUBHolding Account for PUB Associate reassignment.  Using UserId=54 for right now
 	//Make this a bulk process
-	public List<DeactivationMessage>  reassign(List<Integer> productsToReassign,
+	public List<DeactivationMessage>  reassignProducts(List<Integer> productsToReassign,
 			long userId,
 			JdbcTemplate jdbcTemplate) {
 		
 		String comments = "User: " + userId + "has met the OPA 90 Day Compliance Rule for account reassignment.";
-		Integer newUserId = 54;
+		//TODO: fix this..need to get straight from DB...as the userId for the PubHolding account will vary across envs
+		Integer newUserId = 24850; //@COMPLIANCE_ONLY_PubHolding
 		Map bulkReassignResults =  null;
 		
 		//not really bulk just yet but we are projecting good things
@@ -83,13 +86,12 @@ public class TheUnnamedDeactivationBehavior {
 	}
 	
 	//TODO: need to decide what userId we are acting as when we cancel.  For right now, using -1
-	public List<DeactivationMessage>  cancel(List<Integer>tasksToCancel, 
+	public List<DeactivationMessage>  cancelTasks(List<Integer>tasksToCancel, 
 			long userId,
 			JdbcTemplate jdbcTemplate) {
 		String comments = "User: " + userId + "has met the OPA 90 Day Compliance Rule for account cancellation.";
-		//TODO: fix this
-		//Integer adminUserId = -1; --GENERATING NUMBERFORMAT EXCEPTION
-		Integer adminUserId = 2;
+		//TODO: fix this..need to get straight from DB...as the userId for the OPAComplianceAdmin will vary across envs
+		Integer adminUserId = 24863;
 		
 		BulkProductCancelSP bulkCancel = new BulkProductCancelSP(jdbcTemplate.getDataSource());
 		

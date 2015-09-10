@@ -24,8 +24,6 @@ public class BulkUserDeactivateSP extends StoredProcedure {
 	}
 	
 	 public Map<String, Object> execute(ArrayList<LinkedCaseInsensitiveMap<String>> userIdList) {
-
-		 System.out.println(userIdList.toString().replace("[", "").replace("]", ""));
 	     return super.execute(userIdList.toString().replace("[", "").replace("]",""));
 	 }
 	 

@@ -54,7 +54,7 @@ public class ProductsUserIsInvolvedWithSP extends StoredProcedure {
 		compile();
 	}
 	
-	 public Map execute(List<String> productStatusList, Integer userId) {
+	 public Map execute(List<String> productStatusList, long userId) {
 		 
 	     return super.execute(null,
 	    		 null,

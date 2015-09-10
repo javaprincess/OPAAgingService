@@ -1,9 +1,13 @@
 package aging.POC;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.jdbc.core.JdbcTemplate;
+
 import aging.POC.storedprocedures.rowmappers.ProductId;
+import aging.POC.util.OPAComplianceAgingEnum;
 
 public class User {
 	private long userId;
@@ -15,6 +19,11 @@ public class User {
 	private ConcurrentHashMap<Long, Integer> productsToResubmitMap;
 	private List<Integer> productsToReassign;
 	private List<Integer> tasksToCancel;
+	private JdbcTemplate jdbcTemplate;
+	
+	public User() {
+		
+	}
 	
 	public User(long userId,
 			long notificationFlag,
@@ -40,6 +49,7 @@ public class User {
 	public void setProductsToReassign(List<Integer> reassignList) {this.productsToReassign = reassignList; }
 	public void setTasksToCancel(List<Integer> cancelList) {this.tasksToCancel = cancelList; }
 	public void setActiveLicensee(long activeLicensee) { this.activeLicensee = activeLicensee; }
+	public void setJdbcTemplate(JdbcTemplate jdbcTemplate) { this.jdbcTemplate = jdbcTemplate; }
 	
 	public boolean isPubAssociate() {
 		boolean isPubAssociate = false;
@@ -53,14 +63,17 @@ public class User {
 	public boolean hasAnActiveLicenseeForProduct(long productId) {
 		boolean hasAnActiveLicenseeForProduct = false;
 		
-		//TODO: figure out how to implement this pseudo code
-		//if (something) {
-		//  get the activeLicensee
-		//  setActiveLicensee(activeLicensee);
-		setActiveLicensee(2);
-		//	hasAnActiveLicenseeForProduct = true;
-		//}
+		String hasAnActivateLicenseeForProductSql = "SELECT DISTINCT ownerUserId FROM productState WHERE productId=? and userTypeId=?";
+
+		List<Map<String, Object>> activeLicensees = jdbcTemplate.queryForList(hasAnActivateLicenseeForProductSql, productId, OPAComplianceAgingEnum.LICENSEE.getValue());
 		
+		if (activeLicensees.size() > 0) {
+			System.out.println("the active licensee for this product: " + (Integer)activeLicensees.get(0).get("ownerUserId"));
+			
+			setActiveLicensee((Integer)activeLicensees.get(0).get("ownerUserId"));
+			hasAnActiveLicenseeForProduct=true;
+		}
+	
 		return hasAnActiveLicenseeForProduct;
 	}
 }

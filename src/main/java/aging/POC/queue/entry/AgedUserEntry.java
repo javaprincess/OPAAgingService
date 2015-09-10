@@ -22,12 +22,11 @@ public abstract class AgedUserEntry {
 	protected JsonData jsonData;
 	protected Date createDate;
 	
-	//public abstract AgedUserEntry createEntry(User user);
+	
 	public static <T extends AgedUserEntry> T createEntry(User user, T entry) {
 		
 		entry.job = entry.getJob();
 		entry.id = entry.getNextId();
-		//this.inUseBy = "OPA_Compliance_User_Aging_Service";
 		entry.createDate = Calendar.getInstance().getTime();
 		
 		entry.jsonData = new JsonData(user);
@@ -43,12 +42,14 @@ public abstract class AgedUserEntry {
 		return entry;
 	}
 	
+	public abstract String getJob();
+	
 	public long getNextId() { return OPAUniqueId.getInstance().getNextId();}
 	public long getId() {return id; }
 	public String getInUseBy() {return inUseBy; }
-	public abstract String getJob();
 	public String getEntryName() { return entryName; }
 	public JsonData getJsonData() {return jsonData; }
 	public Date getCreateDate() {return createDate;}
+	
 	
 }

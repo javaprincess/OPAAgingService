@@ -6,10 +6,11 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import aging.POC.User;
-import aging.POC.queue.entry.AgedUserDeactivationEntry;
 import aging.POC.queue.entry.AgedUserEntry;
 import aging.POC.queue.entry.AgedUserNotificationEntry;
-import aging.POC.util.OPAComplianceAgingConstants;
+import aging.POC.queue.entry.EntryManager;
+import aging.POC.storedprocedures.rowmappers.AgedUser;
+import aging.POC.util.OPAComplianceAgingEnum;
 
 @Component("thirdNotificationEnforcer")
 public class ThirdNotificationEnforcer extends AgingPolicyEnforcer  {
@@ -42,15 +43,16 @@ public class ThirdNotificationEnforcer extends AgingPolicyEnforcer  {
 	public void enforcePolicy() {
 		
 		long isPub;
-		Integer age = new Integer(OPAComplianceAgingConstants.DELTA_2.getNotificationDelta());
-		Integer notificationFlag = new Integer(OPAComplianceAgingConstants.DELTA_3.getNotificationDelta());
-	
-		List<AgedUserEntry> notificationList = agedUserEntryRepository.findAllAgingCandidatesByAge(90-age);
+		Integer age = new Integer(OPAComplianceAgingEnum.DELTA_2.getValue());
+		Integer notificationFlag = new Integer(OPAComplianceAgingEnum.DELTA_3.getValue());
+		EntryManager entryManager = new EntryManager(agedUserEntryRepository);
+		
+		List<AgedUser> notificationList = agedUserEntryRepository.findAllAgingCandidatesByAge(90-age);
 		List<String> userIdList = new ArrayList<String>();
 
 		System.out.println("looking for " + notificationFlag + " day aging candidate matches: " + notificationList.size());
 			
-		for (AgedUserEntry element : notificationList) {
+		/*for (AgedUserEntry element : notificationList) {
 			isPub = element.getJsonData().getUser().getIsPub();
 			userIdList.add(new Long(element.getJsonData().getUser().getUserId()).toString());
 				
@@ -63,8 +65,9 @@ public class ThirdNotificationEnforcer extends AgingPolicyEnforcer  {
 				
 			//agedUserEntryRepository.save(new AgedUserNotificationEntry().createEntry(user));
 			agedUserEntryRepository.save(AgedUserEntry.createEntry(user, new AgedUserNotificationEntry("ENFORCE_WARNING_NOTIFICATION")));
-		}
-			
+		}*/
+		
+		entryManager.addWarningEntries(notificationList);
 		bulkUserNotificationFlagUpdate(userIdList, notificationFlag);
 		/*try {
 			emailUtils.sendNotificationEMail();

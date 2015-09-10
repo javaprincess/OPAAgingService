@@ -9,7 +9,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 
-import aging.POC.util.OPAComplianceAgingConstants;
+import aging.POC.util.OPAComplianceAgingEnum;
 import aging.POC.enforcers.factory.AgingPolicyEnforcerFactory;
 
 
@@ -40,7 +40,7 @@ public class AgingService implements CommandLineRunner {
 	
 	@Override
 	public void run(String... args) throws Exception {
-		OPAComplianceAgingConstants.initialize();
+		OPAComplianceAgingEnum.initialize();
 		
 		//printOutAllSpringBeans();
 	

@@ -5,25 +5,26 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-public enum OPAComplianceAgingConstants {
+public enum OPAComplianceAgingEnum {
 	
 	DELTA_1("OPA_COMPLIANCE_AGING_DELTA_1"),
 	DELTA_2("OPA_COMPLIANCE_AGING_DELTA_2"),
 	DELTA_3("OPA_COMPLIANCE_AGING_DELTA_3"),
-	DELTA_4("OPA_COMPLIANCE_AGING_DELTA_4");
+	DELTA_4("OPA_COMPLIANCE_AGING_DELTA_4"),
+	LICENSEE("2");
 	
-	private String notificationDelta;
+	private String value;
 
-	private OPAComplianceAgingConstants(String notificationDelta) {
-		this.notificationDelta = notificationDelta;
+	private OPAComplianceAgingEnum(String value) {
+		this.value = value;
 	}
 	
-	public String getNotificationDelta() {
-		return this.notificationDelta;
+	public String getValue() {
+		return this.value;
 	}
 	
-	private void setNotificationDelta(String notificationDelta) {
-		this.notificationDelta = notificationDelta;
+	private void setValue(String value) {
+		this.value = value;
 	}
 	
 	public static void initialize() {
@@ -31,8 +32,8 @@ public enum OPAComplianceAgingConstants {
 			Properties prop = new Properties();
 			prop.load(in);
 			
-			for (OPAComplianceAgingConstants property : values()) 
-				property.setNotificationDelta(prop.getProperty(property.getNotificationDelta()));
+			for (OPAComplianceAgingEnum property : values()) 
+				property.setValue(prop.getProperty(property.getValue()));
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
