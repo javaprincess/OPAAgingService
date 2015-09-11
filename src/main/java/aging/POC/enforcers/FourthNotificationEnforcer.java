@@ -40,11 +40,11 @@ public class FourthNotificationEnforcer extends AgingPolicyEnforcer  {
 			e.printStackTrace();
 		}*/
 			
-		deactivate(notificationList);
+		//deactivate(notificationList);
 	}
 
 
-	private void deactivate(List<AgedUserEntry> agedUserEntryList) {
+	/*private void deactivate(List<AgedUserEntry> agedUserEntryList) {
 		List<User> userList = new ArrayList<User>();
 		
 		for (AgedUserEntry agedUserEntry : agedUserEntryList)
@@ -53,7 +53,7 @@ public class FourthNotificationEnforcer extends AgingPolicyEnforcer  {
 		deactivatePolicyEnforcer.setUserList(userList);
 		deactivatePolicyEnforcer.enforcePolicy();
 
-	}
+	}*/
 	
 	
 }

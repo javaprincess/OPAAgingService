@@ -44,13 +44,14 @@ public class AgingService implements CommandLineRunner {
 		
 		//printOutAllSpringBeans();
 	
-		//AgingPolicyEnforcer enforcer = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("scanner");
+		AgingPolicyEnforcer enforcer1 = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("scanner");
+		enforcer1.enforcePolicy();
 		//AgingPolicyEnforcer enforcer = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("firstNotificationEnforcer");
 		//AgingPolicyEnforcer enforcer = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("secondNotificationEnforcer");
 		//AgingPolicyEnforcer enforcer = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("thirdNotificationEnforcer");
-		AgingPolicyEnforcer enforcer = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("fourthNotificationEnforcer");
-		
-		enforcer.enforcePolicy();
+		//AgingPolicyEnforcer enforcer = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("fourthNotificationEnforcer");
+		AgingPolicyEnforcer enforcer4 = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("deactivatePolicyEnforcer");
+		enforcer4.enforcePolicy();
 	}
 		
 	private void printOutAllSpringBeans() {

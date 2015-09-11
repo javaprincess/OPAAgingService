@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Component;
 
 import aging.POC.User;
+import aging.POC.queue.entry.AgedUserEntry;
 import aging.POC.queue.entry.EntryManager;
 import aging.POC.storedprocedures.rowmappers.DeactivationMessage;
 import aging.POC.storedprocedures.rowmappers.ProductId;
@@ -18,12 +19,12 @@ import aging.POC.deactivation.DeactivationBehavior;
 @Component("deactivatePolicyEnforcer")
 public class DeactivatePolicyEnforcer extends AgingPolicyEnforcer {
 
-	private EntryManager entryManager;
+	//private EntryManager entryManager;
 	private List<User> userList;
 	
 	
 	public DeactivatePolicyEnforcer() {
-		this.entryManager =  new EntryManager(agedUserEntryRepository);
+		
 	}
 	
 	public void setUserList(List<User> userList) {
@@ -31,8 +32,18 @@ public class DeactivatePolicyEnforcer extends AgingPolicyEnforcer {
 	}
 	
 	public void enforcePolicy() {
-
-		deactivateUsers(deactivateProductsUserIdListIsInvolvedWith(userList));
+		
+		//EntryManager entryManager = new EntryManager(agedUserEntryRepository);
+			
+		List<AgedUserEntry> agedUserEntryExpiryList = agedUserEntryRepository.findAllAgingCandidatesByAge(90);
+		List<User> expiryList = new ArrayList<User>();
+		
+		for (AgedUserEntry userToExpire : agedUserEntryExpiryList) 
+			expiryList.add(userToExpire.getJsonData().getUser());
+		
+		
+		System.out.println("looking for " + 90  + " day aging candidate matches: " + expiryList.size());
+		deactivateUsers(deactivateProductsUserIdListIsInvolvedWith(expiryList));
 	}
 	
 	private void deactivateUsers(List<Long> userIdsToDeactivateList) {
@@ -51,49 +62,50 @@ public class DeactivatePolicyEnforcer extends AgingPolicyEnforcer {
 		//TODO: get rid of this line
 		List<String> productStatusList = new ArrayList<String>( Arrays.asList("1","2","3","6","7","8") );
 		
-		ConcurrentHashMap<User, ArrayList<ProductId>> userProductIdsConcurrentHashMap = null;
+		List<User> userWithProductList = null;
 		ConcurrentHashMap<String, ArrayList<String>> errorMessageMapForUsersWithProductsThatFailedDeactivation =  null;
 		
-		userProductIdsConcurrentHashMap = getProductsUsersAreInvolvedWith(productStatusList, userList);	
-		errorMessageMapForUsersWithProductsThatFailedDeactivation = bulkDeactivateUserProducts(userProductIdsConcurrentHashMap);
+		userWithProductList = getProductsUsersAreInvolvedWith(productStatusList, userList);	
+		errorMessageMapForUsersWithProductsThatFailedDeactivation = bulkDeactivateUserProducts(userWithProductList);
 		
-		for (User userToDeactivate : userList) {
+		//for (User userToDeactivate : userList) {
 			//if (!errorMessageMapForUsersWithProductsThatFailedDeactivation.contains(userToDeactivate.getUserId()))
-				userIdsToDeactivateList.add(new Long(userToDeactivate.getUserId()));
-		}
+				//userIdsToDeactivateList.add(new Long(userToDeactivate.getUserId()));
+		//}
 		
 		return userIdsToDeactivateList;
 	}
 	
 	
     private ConcurrentHashMap<String, ArrayList<String>> bulkDeactivateUserProducts(
-				ConcurrentHashMap<User, ArrayList<ProductId>> userProductsConcurrentHashMap) {
+    		List<User> usersWithProductList) {
 			
-
+    		EntryManager entryManager = new EntryManager(agedUserEntryRepository);
     		DeactivationBehavior deactivationBehavior = new DeactivationBehavior();
     		
     		//TODO : I'm building stuff here....where o where is my builder pattern?
     		//which one should I use -- REFACTOR is calling me....hear her voice in the distance.
-    	    for (User user : userProductsConcurrentHashMap.keySet()) {
+    	    for (User user : usersWithProductList) {
     	    	
     	    	
     	    	List<Integer> productsToSuspend = new ArrayList<Integer>();
         		ConcurrentHashMap<Integer, Integer> productsToResubmitMap = new ConcurrentHashMap<Integer, Integer>();
         		List<Integer> productsToReassign = new ArrayList<Integer>();
         		List<Integer> tasksToCancel = new ArrayList<Integer>();
-        		List<ProductId> productIdList = userProductsConcurrentHashMap.get(user.getUserId());
+        		List<ProductId> productIdList = user.getProductIdList();
         		
     	    	System.out.println("userId: " + user.getUserId());
+    	    	System.out.println("productList in bulkDeactivateUserProducts: " + productIdList.toString());
     	    	
 
     	    	if (productIdList != null ) {
-    	    		System.out.println("productIdList size: " + productIdList.size());
+    	    		System.out.println("productIdList size in bulkDeactivateUserProducts: " + productIdList.size());
 	    			for (ProductId productIdListElement : productIdList) {
 	
 	    				Integer productId = productIdListElement.getProductId();
 	    				
 	    				//--check for licensee or associate products
-			    		String associateOrLicenseeSql = "SELECT DISTINCT userTypeId, productId FROM productState WHERE productId=?";
+			    		String associateOrLicenseeSql = "SELECT DISTINCT userTypeId, productId FROM productState WHERE productId=? and ownerUserId > 0";
 	
 			    		//--check for reviewer tasks
 			    		String reviewerSql = "SELECT DISTINCT * FROM productReviews WHERE productStateId in (SELECT id FROM productState WHERE id = ?)";
@@ -131,12 +143,13 @@ public class DeactivatePolicyEnforcer extends AgingPolicyEnforcer {
 	    			System.out.println("number of products to suspend -- user is a licensee on these products: " + productsToSuspend.size());
 	    			System.out.println("number of tasks to cancel -- user is a reviewer on these products: " + tasksToCancel.size());
 	
-	    			entryManager.addExpiryEntries(user,
-	    					productIdList,
-	    					productsToReassign,
-	    					productsToResubmitMap,
-	    					productsToSuspend,
-	    					tasksToCancel);
+	    			user.setProductIdList(productIdList);
+	    			user.setProductsToReassign(productsToReassign);
+	    			user.setProductsToResubmit(productsToResubmitMap);
+	    			user.setProductsToSuspend(productsToSuspend);
+	    			user.setTasksToCancel(tasksToCancel);
+	    			
+	    			entryManager.addExpiryEntry(user);
 	    
 	    			
 	    			/*if (!productsToSuspend.isEmpty()) {
@@ -188,7 +201,7 @@ public class DeactivatePolicyEnforcer extends AgingPolicyEnforcer {
     	return isLicensee;
     }
 
-	private ConcurrentHashMap<User, ArrayList<ProductId>> getProductsUsersAreInvolvedWith(
+	private List<User> getProductsUsersAreInvolvedWith(
 			    List<String> productStatusList,
 				List<User> userList) {
 		
@@ -197,21 +210,26 @@ public class DeactivatePolicyEnforcer extends AgingPolicyEnforcer {
 			
 			System.out.println(userList.size());
 			
-			ConcurrentHashMap<User, ArrayList<ProductId>> cHashMap = new ConcurrentHashMap<User, ArrayList<ProductId>>();
+			List<User> userListWithProducts = new ArrayList<User>();
 	
 			for ( User user : localCopyOfUserList) {
-				System.out.println("userId in DeactivationPolicyEnforcer: " + user.getUserId());
 				
-				Map productsUserIsInvolvedWith = productsUserIsInvolvedWithSP.execute(productStatusList, user.getUserId());
 				
-				@SuppressWarnings("unchecked")
-				ArrayList<ProductId> productIdList = (ArrayList<ProductId>) productsUserIsInvolvedWith.get("RESULT_LIST");
+				//this condidtion is to limit the population size of users to deactivate during testing
+				if ((( user.getUserId() < 20500 ) && (user.getUserId() > 20400))) {
+					System.out.println("userId in DeactivationPolicyEnforcer: " + user.getUserId());
+					Map productsUserIsInvolvedWith = productsUserIsInvolvedWithSP.execute(productStatusList, user.getUserId());
 				
-				System.out.println("productIdList.size(): " + productIdList.size());
-				cHashMap.put(user, productIdList);
+					@SuppressWarnings("unchecked")
+					ArrayList<ProductId> productIdList = (ArrayList<ProductId>) productsUserIsInvolvedWith.get("RESULT_LIST");
+				
+					System.out.println("productIdList.size(): " + productIdList.size());
+					user.setProductIdList(productIdList);
+					userListWithProducts.add(user);
+				}
 			}
 		
-			return cHashMap;
+			return userListWithProducts;
 		}
 	
 

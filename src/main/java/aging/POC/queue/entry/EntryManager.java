@@ -30,7 +30,7 @@ public class EntryManager {
 			System.out.println("notificationFlag: " +  notificationFlag);
 			System.out.println("isPub: " + isPub);
 			
-			if (!isUserOnOPAQueue(userId)) {
+			if (!isUserOnOPAQueue(mapMember)) {
 			
 				User user = new User();
 				user.setUserId(new Long(userId).intValue());
@@ -46,37 +46,54 @@ public class EntryManager {
 	
 	
 	
-	public void addExpiryEntries(User user,
-			List<ProductId> productIdList,
-			List<Integer> productsToSuspend,
-			ConcurrentHashMap<Integer, Integer> productsToResubmitMap,
-			List<Integer> productsToReassign,
-			List<Integer> tasksToCancel) {
+	public void addExpiryEntry(User user) {
 
-			User agedUser = user;
-			agedUser.setProductIdList(productIdList);
+			User agedUser = new User();
+			agedUser.setUserId(user.getUserId());
+			agedUser.setNotificationFlag(user.getNotificationFlag());
+			agedUser.setIsPub(user.getIsPub());
+			
+			/*agedUser.setProductIdList(user.getProductIdList());
 			agedUser.setProductsToSuspend(productsToSuspend);
 			agedUser.setProductsToResubmit(productsToResubmitMap);
 			agedUser.setProductsToReassign(productsToReassign);
-			agedUser.setTasksToCancel(tasksToCancel);
+			agedUser.setTasksToCancel(tasksToCancel);*/
 			
-			//auRepo.save(AgedUserEntry.createEntry(agedUser, new AgedUserDeactivationEntry("ENFORCE_EXPIRY_POLICY")));
-			auRepo.save(new AgedUserDeactivationEntry().createEntry(user));
+			System.out.println("userId in addExpiryEntries: " + agedUser.getUserId());
+			
+			if (!isExpiryUserOnOPAQueue(agedUser.getUserId()))
+				auRepo.save(new AgedUserDeactivationEntry().createEntry(agedUser));
+				
+		
 		
 	}
 	
 	
 	
-	private boolean isUserOnOPAQueue(long userId) {
+	private boolean isUserOnOPAQueue(AgedUserEntry user) {
     	boolean exists = false;
     	
-    	List<AgedUserEntry> userEntry = auRepo.findByUserId(userId);
+    	//List<AgedUserEntry> userEntry = auRepo.findByUserIdAndNotification(user.getJsonData().getUser().getUserId(), 
+    	//		user.getJsonData().getUser().getNotificationFlag());
+    	
+    	List<AgedUserEntry> userEntry = auRepo.findByUserId(user.getJsonData().getUser().getUserId());
     	
     	if (userEntry.size() > 0)
     		exists = true;
     	
     	return exists;
     }
+	
+	private boolean isExpiryUserOnOPAQueue(long userId) {
+		List<AgedUserEntry> userEntry = auRepo.findByUserIdAndJob(userId, "ENFORCE_EXPIRY_NOTIFICIATION");
+		
+		boolean exists = false;
+    	
+    	if (userEntry.size() > 0)
+    		exists = true;
+    	
+    	return exists;
+	}
 
 
 }

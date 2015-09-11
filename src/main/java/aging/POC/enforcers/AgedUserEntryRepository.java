@@ -20,6 +20,12 @@ public interface AgedUserEntryRepository extends MongoRepository<AgedUserEntry, 
     
     @Query("{ 'jsonData.user.userId' : ?0 }")
     public List<AgedUserEntry> findByUserId(long userId);
+    
+    //@Query("{ 'jsonData.user.job' : ?1 } and {jsonData.user.userId' : ?0}")
+    //public List<AgedUserEntry> findByUserIdAndJob(long userId, String job);
+    
+    @Query("{ 'jsonData.user.job' : ?1 } and {jsonData.user.userId' : ?0}")
+    public List<AgedUserEntry> findByUserIdAndJob(long userId, String job);
   
     @Query("{ 'jsonData.user.notificationFlag' :  ?0  }")
     public List<AgedUserEntry> findAllAgingCandidatesByAge(int age);
