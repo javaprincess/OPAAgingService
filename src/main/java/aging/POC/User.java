@@ -10,51 +10,55 @@ import aging.POC.storedprocedures.rowmappers.ProductId;
 import aging.POC.util.OPAComplianceAgingEnum;
 
 public class User {
-	private long userId;
-	private long notificationFlag;
-	private long isPub;
-	private long activeLicensee;
+	private Integer userId;
+	private Integer notificationFlag;
+	private Integer isPub;
+	private Integer activeLicensee;
 	private List<ProductId> productIdList;
 	private List<Integer> productsToSuspend;
-	private ConcurrentHashMap<Long, Integer> productsToResubmitMap;
+	private ConcurrentHashMap<Integer, Integer> productsToResubmitMap;
 	private List<Integer> productsToReassign;
 	private List<Integer> tasksToCancel;
 	private JdbcTemplate jdbcTemplate;
+	
 	
 	public User() {
 		
 	}
 	
-	public User(long userId,
-			long notificationFlag,
-			long isPub) {
+	public User(Integer userId,
+			Integer notificationFlag,
+			Integer isPub) {
 		this.userId = userId;
 		this.notificationFlag =  notificationFlag;
 		this.isPub = isPub;
 	}
 
-	public long getUserId() { return this.userId; } 
-	public long getNotificationFlag() { return this.notificationFlag; } 
+	public Integer getUserId() { return this.userId; } 
+	public Integer getNotificationFlag() { return this.notificationFlag; } 
 	public List<ProductId> getProductIdList() { return this.productIdList; }
 	public List<Integer> getProductsToSuspend() {return this.productsToSuspend; }
-	public ConcurrentHashMap<Long, Integer> getProductsToResubmit() {return this.productsToResubmitMap; }
+	public ConcurrentHashMap<Integer, Integer> getProductsToResubmit() {return this.productsToResubmitMap; }
 	public List<Integer> getProductsToReassign() {return this.productsToReassign; }
 	public List<Integer> getTasksToCancel() { return this.tasksToCancel; }
-	public long getIsPub() { return this.isPub; }
-	public long getActiveLicensee() { return this.activeLicensee; }
+	public Integer getIsPub() { return this.isPub; }
+	public Integer getActiveLicensee() { return this.activeLicensee; }
 	
 	public void setProductIdList(List<ProductId> productIdList) { this.productIdList = productIdList; }
 	public void setProductsToSuspend(List<Integer> suspendList) {this.productsToSuspend = suspendList; }
-	public void setProductsToResubmit(ConcurrentHashMap<Long, Integer> resubmitMap) {this.productsToResubmitMap = resubmitMap; }
+	public void setProductsToResubmit(ConcurrentHashMap<Integer, Integer> resubmitMap) {this.productsToResubmitMap = resubmitMap; }
 	public void setProductsToReassign(List<Integer> reassignList) {this.productsToReassign = reassignList; }
 	public void setTasksToCancel(List<Integer> cancelList) {this.tasksToCancel = cancelList; }
-	public void setActiveLicensee(long activeLicensee) { this.activeLicensee = activeLicensee; }
+	public void setActiveLicensee(Integer activeLicensee) { this.activeLicensee = activeLicensee; }
 	public void setJdbcTemplate(JdbcTemplate jdbcTemplate) { this.jdbcTemplate = jdbcTemplate; }
+	public void setUserId(Integer userId) { this.userId = userId; }
+	public void setNotificationFlag(Integer notificationFlag) {this.notificationFlag = notificationFlag; }
+	public void setIsPub(Integer isPub) { this.isPub =  isPub; }
 	
 	public boolean isPubAssociate() {
 		boolean isPubAssociate = false;
 		
-		if (this.isPub == 1) 
+		if (isPub == 1) 
 			isPubAssociate = true;
 		
 		return isPubAssociate;

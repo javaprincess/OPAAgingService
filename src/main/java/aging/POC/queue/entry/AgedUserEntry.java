@@ -22,25 +22,7 @@ public abstract class AgedUserEntry {
 	protected JsonData jsonData;
 	protected Date createDate;
 	
-	
-	public static <T extends AgedUserEntry> T createEntry(User user, T entry) {
-		
-		entry.job = entry.getJob();
-		entry.id = entry.getNextId();
-		entry.createDate = Calendar.getInstance().getTime();
-		
-		entry.jsonData = new JsonData(user);
-		
-		ObjectMapper mapper = new ObjectMapper();
-		
-		try {
-			mapper.writeValueAsString(entry.jsonData);
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
-		
-		return entry;
-	}
+
 	
 	public abstract String getJob();
 	

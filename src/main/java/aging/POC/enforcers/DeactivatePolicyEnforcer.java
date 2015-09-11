@@ -78,7 +78,7 @@ public class DeactivatePolicyEnforcer extends AgingPolicyEnforcer {
     	    	
     	    	
     	    	List<Integer> productsToSuspend = new ArrayList<Integer>();
-        		ConcurrentHashMap<Long, Integer> productsToResubmitMap = new ConcurrentHashMap<Long, Integer>();
+        		ConcurrentHashMap<Integer, Integer> productsToResubmitMap = new ConcurrentHashMap<Integer, Integer>();
         		List<Integer> productsToReassign = new ArrayList<Integer>();
         		List<Integer> tasksToCancel = new ArrayList<Integer>();
         		List<ProductId> productIdList = userProductsConcurrentHashMap.get(user.getUserId());
@@ -194,15 +194,20 @@ public class DeactivatePolicyEnforcer extends AgingPolicyEnforcer {
 		
 		
 			List<User> localCopyOfUserList = userList;
+			
+			System.out.println(userList.size());
+			
 			ConcurrentHashMap<User, ArrayList<ProductId>> cHashMap = new ConcurrentHashMap<User, ArrayList<ProductId>>();
 	
 			for ( User user : localCopyOfUserList) {
+				System.out.println("userId in DeactivationPolicyEnforcer: " + user.getUserId());
 				
 				Map productsUserIsInvolvedWith = productsUserIsInvolvedWithSP.execute(productStatusList, user.getUserId());
 				
 				@SuppressWarnings("unchecked")
 				ArrayList<ProductId> productIdList = (ArrayList<ProductId>) productsUserIsInvolvedWith.get("RESULT_LIST");
 				
+				System.out.println("productIdList.size(): " + productIdList.size());
 				cHashMap.put(user, productIdList);
 			}
 		

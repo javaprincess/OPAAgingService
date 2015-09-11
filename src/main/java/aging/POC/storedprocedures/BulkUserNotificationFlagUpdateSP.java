@@ -21,6 +21,8 @@ public class BulkUserNotificationFlagUpdateSP extends StoredProcedure {
 	}
 	
 	 public Map<String, Object> execute(List<String> notificationList, Integer newNotificationFlagValue) {
+		 System.out.println("notificationList in bulkUpdate: " + notificationList.toString());
+		 System.out.println("newNotificationFlagValue: " + newNotificationFlagValue);
 	     return super.execute(notificationList.toString().replace("[", "").replace("]",""), newNotificationFlagValue);
 	 }
 	 

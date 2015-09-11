@@ -21,7 +21,7 @@ public class AgingCandidateRowMapper implements RowMapper {
         this.isPub = new Integer(StringUtils.trimAllWhitespace(rs.getString(3))); //location of the isPub flag in the resultSet
         
         agedUser.setUserId(userId);
-        agedUser.setNotificationFlag(userId);
+        agedUser.setNotificationFlag(notificationFlag);
         agedUser.setIsPub(isPub);
         
         return agedUser;

@@ -38,16 +38,16 @@ public class Reactivate extends AgingPolicyEnforcer {
 	
 	private void reactivateUser(long userId) {
 		//look on the QUEUE to get the user's products that were deactivated
-		List<User> userToReactivate = agedUserEntryRepository.findByUserId(userId);
+		List<AgedUserEntry> userToReactivate = agedUserEntryRepository.findByUserId(userId);
 		
 		//TODO: WHATIF there >1 entry for this user on the queue?
-		List<ProductId> productIdList = userToReactivate.get(0).getProductIdList();
+		//List<ProductId> productIdList = userToReactivate.get(0).getProductIdList();
 		
-		System.out.println(userToReactivate.get(0).getUserId());
+		System.out.println(userToReactivate.get(0).getJsonData().getUser().getUserId());
 		
-		for (ProductId productId : productIdList) {
-			System.out.println(productId.getProductId());
-		}
+		//for (ProductId productId : productIdList) {
+		//	System.out.println(productId.getProductId());
+		//}
 		
 		//System.out.println(userToReactivate.get(0).getJsonData().getUser().getNotificationFlag());
 		

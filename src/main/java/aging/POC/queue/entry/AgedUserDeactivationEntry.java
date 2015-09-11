@@ -13,6 +13,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Component("agedUserDeactivationEntry")
 public class AgedUserDeactivationEntry extends AgedUserEntry {
 	
+	public AgedUserDeactivationEntry() {
+		
+	}
+	
 	public AgedUserDeactivationEntry(String job) {
 		this.job = job;
 	}
@@ -21,10 +25,9 @@ public class AgedUserDeactivationEntry extends AgedUserEntry {
 		return this.job;
 	}
 	
-	/*public AgedUserEntry createEntry(User user) {
+	public AgedUserEntry createEntry(User user) {
 		this.id = getNextId();
-		this.inUseBy = "OPA_Compliance_User_Aging_Service";
-		this.job = "ENFORCE_DEACTIVIATION_POLICY";
+		this.job = "ENFORCE_EXPIRY_NOTIFICATION";
 		this.createDate = Calendar.getInstance().getTime();
 		
 		this.jsonData = new JsonData(user);
@@ -38,6 +41,6 @@ public class AgedUserDeactivationEntry extends AgedUserEntry {
 		}
 		
 		return this;
-	}*/
+	}
 
 }

@@ -19,7 +19,7 @@ public class DeactivationBehavior {
 	}
 	
 	public List<DeactivationMessage> suspendProducts(List<Integer> productsToSuspend, 
-			long userId, 
+			Integer userId, 
 			JdbcTemplate jdbcTemplate) {
 		
 		String comments = "User: " + userId + "has met the OPA 90 Day Compliance Rule for account suspension.";
@@ -43,7 +43,7 @@ public class DeactivationBehavior {
 	}
 	
 	public List<DeactivationMessage>  resubmitProducts(ConcurrentHashMap<Long, Integer> productsToResubmitMap, 
-			long userId,
+			Integer userId,
 			JdbcTemplate jdbcTemplate) {
 
 		return null;
@@ -53,7 +53,7 @@ public class DeactivationBehavior {
 	//TODO: Create PUBHolding Account for PUB Associate reassignment.  Using UserId=54 for right now
 	//Make this a bulk process
 	public List<DeactivationMessage>  reassignProducts(List<Integer> productsToReassign,
-			long userId,
+			Integer userId,
 			JdbcTemplate jdbcTemplate) {
 		
 		String comments = "User: " + userId + "has met the OPA 90 Day Compliance Rule for account reassignment.";
@@ -87,7 +87,7 @@ public class DeactivationBehavior {
 	
 	//TODO: need to decide what userId we are acting as when we cancel.  For right now, using -1
 	public List<DeactivationMessage>  cancelTasks(List<Integer>tasksToCancel, 
-			long userId,
+			Integer userId,
 			JdbcTemplate jdbcTemplate) {
 		String comments = "User: " + userId + "has met the OPA 90 Day Compliance Rule for account cancellation.";
 		//TODO: fix this..need to get straight from DB...as the userId for the OPAComplianceAdmin will vary across envs
