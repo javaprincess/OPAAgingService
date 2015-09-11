@@ -1,5 +1,6 @@
 package aging.POC.storedprocedures;
 
+
 import java.sql.Types;
 import java.util.List;
 import java.util.Map;
@@ -10,43 +11,37 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.SqlParameter;
 import org.springframework.jdbc.core.SqlReturnResultSet;
 import org.springframework.jdbc.object.StoredProcedure;
-import org.springframework.stereotype.Component;
 
 import aging.POC.storedprocedures.rowmappers.DeactivationRowMapper;
 
-public class BulkProductCancelSP extends StoredProcedure {
+
+public class UndoBulkProductSuspendSP extends StoredProcedure {
 	
-	public BulkProductCancelSP(DataSource dataSource) {
-		super(dataSource, "dbo.spBulkCancel");
+	public UndoBulkProductSuspendSP(DataSource dataSource) {
+		//super(dataSource, "dbo.spAgingFindProductsUserIsInvolvedWithTMA");
+		super(dataSource, "dbo.spUndoAdminBulkSuspendProducts");
 		
 		RowMapper rowMapper = new DeactivationRowMapper();
 		
 		declareParameter(new SqlReturnResultSet("RESULT_LIST", rowMapper));
 		
 		SqlParameter productIdListParam = new SqlParameter("pProductIdList", Types.VARCHAR);
-		SqlParameter adminUserIdParam = new SqlParameter("userId", Types.INTEGER);
-		SqlParameter userIdParam = new SqlParameter("inboxUserId", Types.INTEGER);
 		SqlParameter commentsParam = new SqlParameter("comments", Types.VARCHAR);
+		SqlParameter userIdParam = new SqlParameter("userId", Types.INTEGER);
+		
 		
 		SqlParameter[] paramArray = {productIdListParam,
-				adminUserIdParam,
-				userIdParam,
-				commentsParam};
-				
+				commentsParam,
+				userIdParam};
 		setParameters(paramArray);
 		compile();
 	}
 	
-	 public Map execute(String productIdList, 
-			 Integer adminUserId,
-			 Integer userId,
-			 String comment) {
-		 
+	 public Map execute(String productIdList, String comments, Integer userId) {
 	
-		return super.execute(productIdList,
-				adminUserId,
-				userId,
-				comment);
+		return super.execute(productIdList, 
+	   		 comments,
+	   		 userId);
 	 }
-
+	 
 }

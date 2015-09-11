@@ -152,7 +152,7 @@ public class DeactivatePolicyEnforcer extends AgingPolicyEnforcer {
 	    			entryManager.addExpiryEntry(user);
 	    
 	    			
-	    			/*if (!productsToSuspend.isEmpty()) {
+	    			if (!productsToSuspend.isEmpty()) {
 	    				List<DeactivationMessage> suspensionErrorMessages = deactivationBehavior.suspendProducts(productsToSuspend, 
 	    						user.getUserId(), 
 	    						jdbcTemplate);
@@ -165,8 +165,10 @@ public class DeactivatePolicyEnforcer extends AgingPolicyEnforcer {
 	    			}
 	    			
 	    			if (!productsToReassign.isEmpty()) {
+	    				Integer newUserId = 24850; //@COMPLIANCE_ONLY_PubHolding
 	    				List<DeactivationMessage> resassignmentErrorMessages = deactivationBehavior.reassignProducts(productsToReassign, 
 	    						user.getUserId(), 
+	    						newUserId,
 	    						jdbcTemplate);
 	    			}
 	    			
@@ -174,7 +176,7 @@ public class DeactivatePolicyEnforcer extends AgingPolicyEnforcer {
 	    				List<DeactivationMessage> cancellationErrorMessages = deactivationBehavior.cancelTasks(tasksToCancel, 
 	    						user.getUserId(), 
 	    						jdbcTemplate);
-	    			}*/
+	    			}
 	    			
     	    	}
     			
@@ -214,9 +216,10 @@ public class DeactivatePolicyEnforcer extends AgingPolicyEnforcer {
 	
 			for ( User user : localCopyOfUserList) {
 				
-				
+				System.out.println(user.getUserId());
 				//this condidtion is to limit the population size of users to deactivate during testing
-				if ((( user.getUserId() < 20500 ) && (user.getUserId() > 20400))) {
+				//if ((( user.getUserId() < 20500 ) && (user.getUserId() > 20400))) {
+				if (user.getUserId().equals(new Integer(12220))) {
 					System.out.println("userId in DeactivationPolicyEnforcer: " + user.getUserId());
 					Map productsUserIsInvolvedWith = productsUserIsInvolvedWithSP.execute(productStatusList, user.getUserId());
 				

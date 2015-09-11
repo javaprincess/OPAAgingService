@@ -22,7 +22,7 @@ public class EntryManager {
 		
 		for (AgedUserEntry mapMember : agingCandidatesList) {
 			
-			long userId = mapMember.getJsonData().getUser().getUserId();
+			Integer userId = new Long(mapMember.getJsonData().getUser().getUserId()).intValue();
 			long notificationFlag = mapMember.getJsonData().getUser().getNotificationFlag();
 			long isPub = mapMember.getJsonData().getUser().getIsPub();
 			System.out.println("in entryManager:");
@@ -30,10 +30,10 @@ public class EntryManager {
 			System.out.println("notificationFlag: " +  notificationFlag);
 			System.out.println("isPub: " + isPub);
 			
-			if (!isUserOnOPAQueue(mapMember)) {
+			if (!isUserOnOPAQueue(userId)) {
 			
 				User user = new User();
-				user.setUserId(new Long(userId).intValue());
+				user.setUserId(userId);
 				user.setNotificationFlag(new Long(notificationFlag).intValue());
 				user.setIsPub(new Long(isPub).intValue());
 				
@@ -53,11 +53,11 @@ public class EntryManager {
 			agedUser.setNotificationFlag(user.getNotificationFlag());
 			agedUser.setIsPub(user.getIsPub());
 			
-			/*agedUser.setProductIdList(user.getProductIdList());
-			agedUser.setProductsToSuspend(productsToSuspend);
-			agedUser.setProductsToResubmit(productsToResubmitMap);
-			agedUser.setProductsToReassign(productsToReassign);
-			agedUser.setTasksToCancel(tasksToCancel);*/
+			agedUser.setProductIdList(user.getProductIdList());
+			agedUser.setProductsToSuspend(user.getProductsToSuspend());
+			agedUser.setProductsToResubmit(user.getProductsToResubmit());
+			agedUser.setProductsToReassign(user.getProductsToReassign());
+			agedUser.setTasksToCancel(user.getTasksToCancel());
 			
 			System.out.println("userId in addExpiryEntries: " + agedUser.getUserId());
 			
@@ -68,15 +68,28 @@ public class EntryManager {
 		
 	}
 	
+	public AgedUserEntry pullAgedUserToReactivate(Integer userId) {
+		AgedUserEntry userToReactivate = null;
+		
+		//TODO: if user is not on the queue...throw an Exception and send the error message to the OPAAdmin
+		//screen
+		if (!isUserOnOPAQueue(userId)) {
+			return userToReactivate;
+		} else {
+			List<AgedUserEntry> agedUserEntry = auRepo.findByUserId(userId);
+			userToReactivate =  agedUserEntry.get(0);
+		}
+
+		return userToReactivate;
+	}
 	
-	
-	private boolean isUserOnOPAQueue(AgedUserEntry user) {
+	private boolean isUserOnOPAQueue(Integer userId) {
     	boolean exists = false;
     	
     	//List<AgedUserEntry> userEntry = auRepo.findByUserIdAndNotification(user.getJsonData().getUser().getUserId(), 
     	//		user.getJsonData().getUser().getNotificationFlag());
     	
-    	List<AgedUserEntry> userEntry = auRepo.findByUserId(user.getJsonData().getUser().getUserId());
+    	List<AgedUserEntry> userEntry = auRepo.findByUserId(userId);
     	
     	if (userEntry.size() > 0)
     		exists = true;
