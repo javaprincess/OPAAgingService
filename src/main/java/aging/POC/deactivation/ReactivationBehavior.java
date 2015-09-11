@@ -44,7 +44,7 @@ public class ReactivationBehavior extends AgingPolicyEnforcer {
 		unCancelTasks(userToReactivate.getJsonData().getUser().getTasksToCancel());
 		
 		if (userToReactivate.getJsonData().getUser().isPubAssociate())
-			unResubmitProducts(userToReactivate.getJsonData().getUser().getProductsToResubmit());
+			unReassignProducts(userToReactivate.getJsonData().getUser().getProductsToReassign());
 	}
 	
 	private ArrayList<ReactivationMessage>  unSuspendProducts(List<Integer> unsuspendList) {
@@ -94,23 +94,21 @@ public class ReactivationBehavior extends AgingPolicyEnforcer {
 	//This is only for PUBAssociates.  
 	//If the productState hasn't changed then
 	//the product can be reassigned from PUBHolding to the reactivatedUser
-	private ArrayList<ReactivationMessage>  unResubmitProducts(ConcurrentHashMap<Integer, Integer> unresubmitProductMap) {
+	private ArrayList<ReactivationMessage>  unReassignProducts(List<Integer> unreassignProductList) {
 		
 		Integer pubHoldingUser = 24850;
-		ConcurrentHashMap<Integer, Integer> productsToUnresubmitMap = unresubmitProductMap;
+		List<Integer> productsToUnreassignList = unreassignProductList;
 		String comments = "User: " + userId + "is being reactivated by the OPAAdmin. unResubmitting (rassigning) user's tasks.";
-		BulkProductReassignSP undoResubmit = new BulkProductReassignSP(jdbcTemplate.getDataSource());
+		BulkProductReassignSP undoReassign = new BulkProductReassignSP(jdbcTemplate.getDataSource());
 		ArrayList<ReactivationMessage> reactivationMessageList = null;
-		Map undoBulkResubmitResults = null;
+		Map undoBulkReassignResults = null;
 		
-		Collection<Integer> productIdCollection = productsToUnresubmitMap.values();
-		
-		for (Integer productId : productIdCollection ) {
+		for (Integer productId : productsToUnreassignList ) {
 		
 			//need to check the state of the product assigned to PUBHolding.  
 			//if the state hasn't changed, then you can resubmit/resassign the product
 			//reassign the product to the associate.
-			undoBulkResubmitResults = undoResubmit.execute(pubHoldingUser,
+			undoBulkReassignResults = undoReassign.execute(pubHoldingUser,
 				userId,
 				productId,
 				comments);
@@ -118,7 +116,7 @@ public class ReactivationBehavior extends AgingPolicyEnforcer {
 		}
 		
 		
-		reactivationMessageList = (ArrayList<ReactivationMessage>) undoBulkResubmitResults.get("RESULT_LIST");
+		reactivationMessageList = (ArrayList<ReactivationMessage>) undoBulkReassignResults.get("RESULT_LIST");
 		
 		for (ReactivationMessage reactivationMessage : reactivationMessageList) {
 			System.out.format("%d, %s, %s\n", 
