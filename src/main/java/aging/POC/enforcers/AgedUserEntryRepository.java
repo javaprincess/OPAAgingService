@@ -13,16 +13,9 @@ import aging.POC.storedprocedures.rowmappers.AgedUser;
 
 @Document(collection="AgedUserEntryRepository")
 public interface AgedUserEntryRepository extends MongoRepository<AgedUserEntry, String> {
-
-	
-	//public List<AgedUserEntry> findByJob(String job);
-    //public AgedUserEntry findById(long id);
     
     @Query("{ 'jsonData.user.userId' : ?0 }")
     public List<AgedUserEntry> findByUserId(long userId);
-    
-    //@Query("{ 'jsonData.user.job' : ?1 } and {jsonData.user.userId' : ?0}")
-    //public List<AgedUserEntry> findByUserIdAndJob(long userId, String job);
     
     @Query("{ 'jsonData.user.job' : ?1 } and {jsonData.user.userId' : ?0}")
     public List<AgedUserEntry> findByUserIdAndJob(long userId, String job);

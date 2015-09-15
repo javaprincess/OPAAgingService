@@ -1,4 +1,4 @@
-package aging.POC.enforcers;
+package aging.POC.deleteThis;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,6 +8,8 @@ import javax.annotation.Resource;
 import org.springframework.stereotype.Component;
 
 import aging.POC.User;
+import aging.POC.enforcers.AgingPolicyEnforcer;
+import aging.POC.enforcers.ExpiryPolicyEnforcer;
 import aging.POC.queue.entry.AgedUserEntry;
 import aging.POC.queue.entry.AgedUserNotificationEntry;
 import aging.POC.queue.entry.EntryManager;
@@ -18,7 +20,7 @@ import aging.POC.util.OPAComplianceAgingEnum;
 public class FourthNotificationEnforcer extends AgingPolicyEnforcer  {
 
 	@Resource(name="deactivatePolicyEnforcer")
-	private DeactivatePolicyEnforcer deactivatePolicyEnforcer;
+	private ExpiryPolicyEnforcer deactivatePolicyEnforcer;
 	
 	public void enforcePolicy() {
 		

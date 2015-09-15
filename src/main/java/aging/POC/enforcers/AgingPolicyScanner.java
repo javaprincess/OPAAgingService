@@ -23,7 +23,9 @@ public class AgingPolicyScanner extends AgingPolicyEnforcer {
 	//AgedUserEntry from the queue.  So a User object has to be created, an AgedUserNotificationEntry created, then 
 	//passed to the EntryManager to add to the queue.  All the other notifiers don't have to go through this step because 
 	//they are pulling AgedUserEntry off the queue and then putting a new one on the queue.
-	public void enforcePolicy() {
+	//Note: incomingDeltaValue is only provided to accommodate inheritance
+	@Override
+	public void enforcePolicy(Integer incomingDeltaValue) {
 
 		Map agingCandidatesMap = findUserAgingCandidatesSP.execute();
 		List<AgedUserEntry> candidateList =  new ArrayList<AgedUserEntry>();
@@ -32,11 +34,6 @@ public class AgingPolicyScanner extends AgingPolicyEnforcer {
 		ArrayList<AgedUser> candidateResultList = (ArrayList<AgedUser>) agingCandidatesMap.get("RESULT_LIST");
 		
 		for (AgedUser agedUserEntry : candidateResultList) {
-			
-				System.out.println("in scanner:");
-				System.out.println("userId: " + agedUserEntry.getUserId());
-				System.out.println("isPub: " + agedUserEntry.getIsPub());
-			
 			
 			User agedUser = new User();
 			agedUser.setUserId(agedUserEntry.getUserId());

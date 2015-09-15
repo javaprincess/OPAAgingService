@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.annotation.Resource;
+
 import org.springframework.stereotype.Component;
 
 import aging.POC.User;
@@ -14,16 +16,20 @@ import aging.POC.queue.entry.EntryManager;
 import aging.POC.storedprocedures.rowmappers.DeactivationMessage;
 import aging.POC.storedprocedures.rowmappers.ProductId;
 import aging.POC.util.OPAComplianceAgingEnum;
-import aging.POC.deactivation.DeactivationBehavior;
+import aging.POC.transactions.DeactivationTx;
 
-@Component("deactivatePolicyEnforcer")
-public class DeactivatePolicyEnforcer extends AgingPolicyEnforcer {
+@Component("expiryPolicyEnforcer")
+public class ExpiryPolicyEnforcer extends AgingPolicyEnforcer {
 
+	//TODO: fixThis....it causes NoSuchBeanDefinitionException on startup
+	//@Resource(name="deactivationTx")
+	//DeactivationTx deactivationTx;
+	
 	//private EntryManager entryManager;
 	private List<User> userList;
 	
 	
-	public DeactivatePolicyEnforcer() {
+	public ExpiryPolicyEnforcer() {
 		
 	}
 	
@@ -31,18 +37,17 @@ public class DeactivatePolicyEnforcer extends AgingPolicyEnforcer {
 		this.userList = userList;
 	}
 	
-	public void enforcePolicy() {
+	@Override
+	public void enforcePolicy(Integer incomingDeltaValue) {
+	
+		Integer delta = incomingDeltaValue;
 		
-		//EntryManager entryManager = new EntryManager(agedUserEntryRepository);
-			
-		List<AgedUserEntry> agedUserEntryExpiryList = agedUserEntryRepository.findAllAgingCandidatesByAge(90);
+		List<AgedUserEntry> agedUserEntryExpiryList = agedUserEntryRepository.findAllAgingCandidatesByAge(90-delta);
 		List<User> expiryList = new ArrayList<User>();
 		
 		for (AgedUserEntry userToExpire : agedUserEntryExpiryList) 
 			expiryList.add(userToExpire.getJsonData().getUser());
 		
-		
-		System.out.println("looking for " + 90  + " day aging candidate matches: " + expiryList.size());
 		deactivateUsers(deactivateProductsUserIdListIsInvolvedWith(expiryList));
 	}
 	
@@ -81,7 +86,7 @@ public class DeactivatePolicyEnforcer extends AgingPolicyEnforcer {
     		List<User> usersWithProductList) {
 			
     		EntryManager entryManager = new EntryManager(agedUserEntryRepository);
-    		DeactivationBehavior deactivationBehavior = new DeactivationBehavior();
+    		DeactivationTx deactivationTx = new DeactivationTx();
     		
     		//TODO : I'm building stuff here....where o where is my builder pattern?
     		//which one should I use -- REFACTOR is calling me....hear her voice in the distance.
@@ -153,27 +158,27 @@ public class DeactivatePolicyEnforcer extends AgingPolicyEnforcer {
 	    
 	    			
 	    			if (!productsToSuspend.isEmpty()) {
-	    				List<DeactivationMessage> suspensionErrorMessages = deactivationBehavior.suspendProducts(productsToSuspend, 
+	    				List<DeactivationMessage> suspensionErrorMessages = deactivationTx.suspendProducts(productsToSuspend, 
 	    						user.getUserId(), 
 	    						jdbcTemplate);
 	    			}
 	    			
 	    			if (!productsToResubmitMap.isEmpty()) {
-	    				List<DeactivationMessage> resubmissionErrorMessages = deactivationBehavior.resubmitProducts(productsToResubmitMap, 
+	    				List<DeactivationMessage> resubmissionErrorMessages = deactivationTx.resubmitProducts(productsToResubmitMap, 
 	    						user.getUserId(), 
 	    						jdbcTemplate);
 	    			}
 	    			
 	    			if (!productsToReassign.isEmpty()) {
 	    				Integer newUserId = 24850; //@COMPLIANCE_ONLY_PubHolding
-	    				List<DeactivationMessage> resassignmentErrorMessages = deactivationBehavior.reassignProducts(productsToReassign, 
+	    				List<DeactivationMessage> resassignmentErrorMessages = deactivationTx.reassignProducts(productsToReassign, 
 	    						user.getUserId(), 
 	    						newUserId,
 	    						jdbcTemplate);
 	    			}
 	    			
 	    			if (!tasksToCancel.isEmpty()) {
-	    				List<DeactivationMessage> cancellationErrorMessages = deactivationBehavior.cancelTasks(tasksToCancel, 
+	    				List<DeactivationMessage> cancellationErrorMessages = deactivationTx.cancelTasks(tasksToCancel, 
 	    						user.getUserId(), 
 	    						jdbcTemplate);
 	    			}
@@ -217,10 +222,9 @@ public class DeactivatePolicyEnforcer extends AgingPolicyEnforcer {
 			for ( User user : localCopyOfUserList) {
 				
 				System.out.println(user.getUserId());
-				//this condidtion is to limit the population size of users to deactivate during testing
-				//if ((( user.getUserId() < 20500 ) && (user.getUserId() > 20400))) {
+				
 				if (user.getUserId().equals(new Integer(12220))) {
-					System.out.println("userId in DeactivationPolicyEnforcer: " + user.getUserId());
+					System.out.println("userId in ExpiryPolicyEnforcer: " + user.getUserId());
 					Map productsUserIsInvolvedWith = productsUserIsInvolvedWithSP.execute(productStatusList, user.getUserId());
 				
 					@SuppressWarnings("unchecked")

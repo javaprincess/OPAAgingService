@@ -44,14 +44,18 @@ public class AgingService implements CommandLineRunner {
 		
 		//printOutAllSpringBeans();
 	
-		//AgingPolicyEnforcer enforcer1 = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("scanner");
-		//enforcer1.enforcePolicy();
-		//AgingPolicyEnforcer enforcer = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("firstNotificationEnforcer");
+		AgingPolicyEnforcer enforcer1 = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("scanner");
+		enforcer1.enforcePolicy(0);
+		AgingPolicyEnforcer enforcer = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("warningNotificationEnforcer");
+		enforcer.enforcePolicy(30);
+		enforcer.enforcePolicy(15);
+		enforcer.enforcePolicy(5);
+		enforcer.enforcePolicy(0);
 		//AgingPolicyEnforcer enforcer = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("secondNotificationEnforcer");
 		//AgingPolicyEnforcer enforcer = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("thirdNotificationEnforcer");
 		//AgingPolicyEnforcer enforcer = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("fourthNotificationEnforcer");
-		AgingPolicyEnforcer enforcer4 = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("deactivatePolicyEnforcer");
-		enforcer4.enforcePolicy();
+		AgingPolicyEnforcer enforcer4 = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("expiryPolicyEnforcer");
+		enforcer4.enforcePolicy(0);
 	}
 		
 	private void printOutAllSpringBeans() {

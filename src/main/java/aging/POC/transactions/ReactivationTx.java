@@ -1,32 +1,24 @@
-package aging.POC.deactivation;
+package aging.POC.transactions;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.springframework.stereotype.Component;
-
-import aging.POC.User;
+import org.springframework.transaction.annotation.Transactional;
 import aging.POC.enforcers.AgingPolicyEnforcer;
 import aging.POC.queue.entry.AgedUserEntry;
 import aging.POC.queue.entry.EntryManager;
 import aging.POC.storedprocedures.BulkProductReassignSP;
-import aging.POC.storedprocedures.BulkProductSuspendSP;
 import aging.POC.storedprocedures.UndoBulkProductCancelSP;
 import aging.POC.storedprocedures.UndoBulkProductSuspendSP;
-import aging.POC.storedprocedures.rowmappers.AgedUser;
-import aging.POC.storedprocedures.rowmappers.DeactivationMessage;
-import aging.POC.storedprocedures.rowmappers.ProductId;
 import aging.POC.storedprocedures.rowmappers.ReactivationMessage;
 
-@Component("reactivationBehavior")
-public class ReactivationBehavior extends AgingPolicyEnforcer {
+@Component("reactivationTx")
+public class ReactivationTx extends AgingPolicyEnforcer {
 	
 	private String userId;
 	
-	public ReactivationBehavior() {
+	public ReactivationTx() {
 		
 	}
 	
@@ -36,6 +28,7 @@ public class ReactivationBehavior extends AgingPolicyEnforcer {
 	}
 	
 	
+	@Transactional
 	public void enforcePolicy() {
 		EntryManager entryManager = new EntryManager(agedUserEntryRepository);
 		
@@ -47,6 +40,7 @@ public class ReactivationBehavior extends AgingPolicyEnforcer {
 			unReassignProducts(userToReactivate.getJsonData().getUser().getProductsToReassign());
 	}
 	
+	@Transactional
 	private ArrayList<ReactivationMessage>  unSuspendProducts(List<Integer> unsuspendList) {
 		List<Integer> productsToUnsuspendList = unsuspendList;
 		String comments = "User: " + userId + "is being reactivated by the OPAAdmin. Unsuspending user's products";
@@ -69,6 +63,7 @@ public class ReactivationBehavior extends AgingPolicyEnforcer {
 		return reactivationMessageList;
 	}
 	
+	@Transactional
 	private ArrayList<ReactivationMessage> unCancelTasks(List<Integer> uncancelTasksList) {
 		List<Integer> tasksToUncancelList = uncancelTasksList;
 		String comments = "User: " + userId + "is being reactivated by the OPAAdmin. Reactivating user's tasks.";
@@ -94,6 +89,7 @@ public class ReactivationBehavior extends AgingPolicyEnforcer {
 	//This is only for PUBAssociates.  
 	//If the productState hasn't changed then
 	//the product can be reassigned from PUBHolding to the reactivatedUser
+	@Transactional
 	private ArrayList<ReactivationMessage>  unReassignProducts(List<Integer> unreassignProductList) {
 		
 		Integer pubHoldingUser = 24850;

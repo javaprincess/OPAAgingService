@@ -1,4 +1,4 @@
-package aging.POC.deactivation;
+package aging.POC.transactions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import aging.POC.storedprocedures.BulkProductCancelSP;
 import aging.POC.storedprocedures.BulkProductReassignSP;
@@ -15,13 +16,14 @@ import aging.POC.storedprocedures.BulkProductSuspendSP;
 import aging.POC.storedprocedures.rowmappers.DeactivationMessage;
 import aging.POC.storedprocedures.rowmappers.ProductId;
 
-@Component("deactivationBehavior")
-public class DeactivationBehavior {
+@Component("deactivationTx")
+public class DeactivationTx {
 
-	public DeactivationBehavior() {
+	public DeactivationTx() {
 		
 	}
 	
+	@Transactional
 	public List<DeactivationMessage> suspendProducts(List<Integer> productsToSuspend, 
 			Integer userId, 
 			JdbcTemplate jdbcTemplate) {
@@ -46,6 +48,7 @@ public class DeactivationBehavior {
 		return deactivationMessageList;
 	}
 	
+	@Transactional
 	public List<DeactivationMessage>  resubmitProducts(ConcurrentHashMap<Integer, Integer> productsToResubmitMap, 
 			Integer userId,
 			JdbcTemplate jdbcTemplate) {
@@ -53,7 +56,6 @@ public class DeactivationBehavior {
 		
 		Set<Integer> activeLicensees = productsToResubmitMap.keySet();
 		
-		//TODO: This has to change once the value in the map becomes a list
 		for (Integer activeLic : activeLicensees) {
 			ArrayList<Integer> productIdList = new ArrayList<Integer>();
 			Integer productId = productsToResubmitMap.get(activeLic);
@@ -71,6 +73,7 @@ public class DeactivationBehavior {
 	}
 	
 	//TODO: Make this a bulk process
+	@Transactional
 	public List<DeactivationMessage>  reassignProducts(List<Integer> productsToReassign,
 			Integer oldUserId,
 			Integer newUserId,
@@ -105,7 +108,7 @@ public class DeactivationBehavior {
 		return deactivationMessageList;
 	}
 	
-	//TODO: need to decide what userId we are acting as when we cancel.  For right now, using -1
+	@Transactional
 	public List<DeactivationMessage>  cancelTasks(List<Integer>tasksToCancel, 
 			Integer userId,
 			JdbcTemplate jdbcTemplate) {

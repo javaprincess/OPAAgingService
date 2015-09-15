@@ -7,10 +7,9 @@
 	</configSuffixes>
 	<enableImports><![CDATA[false]]></enableImports>
 	<configs>
-		<config>java:aging.POC.enforcers.FirstNotificationEnforcer</config>
 	</configs>
 	<autoconfigs>
-		<config>java:aging.POC.enforcers.AgingPolicyEnforcer</config>
+		<config>java:aging.POC.enforcers.AgingService</config>
 	</autoconfigs>
 	<configSets>
 	</configSets>
