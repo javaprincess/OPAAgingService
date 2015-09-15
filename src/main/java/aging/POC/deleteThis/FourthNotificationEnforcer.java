@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 import aging.POC.User;
 import aging.POC.enforcers.AgingPolicyEnforcer;
-import aging.POC.enforcers.ExpiryPolicyEnforcer;
+import aging.POC.enforcers.DeactivatePolicyEnforcer;
 import aging.POC.queue.entry.AgedUserEntry;
 import aging.POC.queue.entry.AgedUserNotificationEntry;
 import aging.POC.queue.entry.EntryManager;
@@ -20,7 +20,7 @@ import aging.POC.util.OPAComplianceAgingEnum;
 public class FourthNotificationEnforcer extends AgingPolicyEnforcer  {
 
 	@Resource(name="deactivatePolicyEnforcer")
-	private ExpiryPolicyEnforcer deactivatePolicyEnforcer;
+	private DeactivatePolicyEnforcer deactivatePolicyEnforcer;
 	
 	public void enforcePolicy() {
 		
