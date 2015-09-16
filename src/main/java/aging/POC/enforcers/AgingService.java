@@ -3,11 +3,15 @@ package aging.POC.enforcers;
 
 
 import java.util.Arrays;
+
 import javax.annotation.Resource;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.embedded.FilterRegistrationBean;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
 
 import aging.POC.util.OPAComplianceAgingEnum;
 import aging.POC.enforcers.factory.AgingPolicyEnforcerFactory;
@@ -57,6 +61,8 @@ public class AgingService implements CommandLineRunner {
 		AgingPolicyEnforcer enforcer4 = AgingPolicyEnforcerFactory.getInstance(ctx).getEnforcer("expiryPolicyEnforcer");
 		enforcer4.enforcePolicy(0);
 	}
+	
+
 		
 	private void printOutAllSpringBeans() {
 		System.out.println("Let's inspect the beans provided by Spring Boot:");

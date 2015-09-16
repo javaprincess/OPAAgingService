@@ -3,11 +3,11 @@ package aging.POC.queue.entry;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+
 import aging.POC.User;
 import aging.POC.enforcers.AgedUserEntryRepository;
 import aging.POC.storedprocedures.rowmappers.AgedUser;
 import aging.POC.storedprocedures.rowmappers.ProductId;
-import aging.POC.queue.entry.AgedUserNotificationEntry;
 
 public class EntryManager {
 	
@@ -38,7 +38,7 @@ public class EntryManager {
 				user.setIsPub(new Long(isPub).intValue());
 				
 				//auRepo.save(AgedUserEntry.createEntry(user, new AgedUserNotificationEntry("ENFORCE_WARNING_NOTIFICATION")));
-				auRepo.save(new AgedUserNotificationEntry().createEntry(user));
+				auRepo.save(new AgedUserWarningEntry().createEntry(user));
 				
 			}
 		}
@@ -62,7 +62,7 @@ public class EntryManager {
 			System.out.println("userId in addExpiryEntries: " + agedUser.getUserId());
 			
 			if (!isExpiryUserOnOPAQueue(agedUser.getUserId()))
-				auRepo.save(new AgedUserDeactivationEntry().createEntry(agedUser));
+				auRepo.save(new AgedUserExpiryEntry().createEntry(agedUser));
 				
 		
 		

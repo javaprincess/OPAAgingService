@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 import aging.POC.User;
 import aging.POC.queue.entry.AgedUserEntry;
-import aging.POC.queue.entry.AgedUserNotificationEntry;
+import aging.POC.queue.entry.AgedUserWarningEntry;
 import aging.POC.queue.entry.EntryManager;
 import aging.POC.storedprocedures.rowmappers.AgedUser;
 
@@ -40,7 +40,7 @@ public class AgingPolicyScanner extends AgingPolicyEnforcer {
 			agedUser.setNotificationFlag(agedUserEntry.getNotificationFlag());
 			agedUser.setIsPub(agedUserEntry.getIsPub());
 			
-			candidateList.add(new AgedUserNotificationEntry().createEntry(agedUser));
+			candidateList.add(new AgedUserWarningEntry().createEntry(agedUser));
 		}
 			
 		

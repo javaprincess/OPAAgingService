@@ -2,24 +2,16 @@ package aging.POC.enforcers;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.annotation.Resource;
 import javax.sql.DataSource;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-
-import aging.POC.User;
 import aging.POC.queue.entry.AgedUserEntry;
 import aging.POC.queue.entry.EntryManager;
 import aging.POC.storedprocedures.BulkUserDeactivateSP;
 import aging.POC.storedprocedures.BulkUserNotificationFlagUpdateSP;
 import aging.POC.storedprocedures.FindUserAgingCandidatesSP;
 import aging.POC.storedprocedures.ProductsUserIsInvolvedWithSP;
-import aging.POC.storedprocedures.UndoBulkProductCancelSP;
-import aging.POC.storedprocedures.UndoBulkProductSuspendSP;
-import aging.POC.storedprocedures.rowmappers.AgedUser;
-import aging.POC.util.OPAComplianceAgingEnum;
+
 
 public abstract class AgingPolicyEnforcer  {
 
