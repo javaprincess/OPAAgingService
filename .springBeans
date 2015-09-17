@@ -9,7 +9,6 @@
 	<configs>
 	</configs>
 	<autoconfigs>
-		<config>java:aging.POC.enforcers.AgingService</config>
 	</autoconfigs>
 	<configSets>
 	</configSets>
